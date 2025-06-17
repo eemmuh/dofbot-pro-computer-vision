@@ -1,22 +1,53 @@
-# Python
+# Python virtual environment
 venv/
+
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Distribution / packaging
+dist/
+build/
 *.egg-info/
 
-# IDE
-.vscode/
+# IDE specific files
 .idea/
+.vscode/
 *.swp
 *.swo
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Local development settings
+local_settings.py
+
+# Database
+*.db
+*.sqlite3
+
+# Media files
+media/
+uploads/
+
+# Static files
+static/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
 
 # Project specific
 *.weights
 *.pt
 *.pth
 *.onnx
-*.log
 *.mp4
 *.avi
 *.jpg
