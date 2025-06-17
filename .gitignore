@@ -1,0 +1,60 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+*.weights
+*.pt
+*.pth
+*.onnx
+*.log
+*.mp4
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Environment
+.env
+
+# Environment variables
+env/
+ENV/
+
+# Logs and databases
+*.sqlite
+*.db
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.bag
+*.bag.active
+*.bag.bak
+*.bag.info
+*.bag.orig.active
+*.bag.orig.bak
+*.bag.orig.info
+*.bag.orig.metadata.*
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model weights and datasets
+*.h5
+*.hdf5
+*.pkl
+datasets/
+models/
