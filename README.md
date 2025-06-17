@@ -56,4 +56,4 @@ python src/main.py
 - OpenCV
 - PyTorch
 - DOFBOT Pro robot arm
-- USB camera 
+- USB camera
