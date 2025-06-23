@@ -21,6 +21,8 @@ cup-stacking-project/
 ├── xml_to_yolo.py       # Convert XML to YOLO format
 ├── labelme_to_yolo.py   # Convert LabelMe JSON to YOLO
 ├── validate_labels.py   # Validate and analyze labels
+├── auto_labeling.py     # AI-powered auto-labeling options
+├── check_box_quality.py # Analyze bounding box quality
 └── README.md
 ```
 
@@ -32,15 +34,16 @@ cup-stacking-project/
 - **YOLO Configuration**: Single-class cup detection model configured
 - **Label Conversion**: XML to YOLO format conversion script ready
 - **Validation Tools**: Scripts to check label quality and statistics
+- **Auto-Labeling Options**: Multiple AI-powered labeling solutions available
 
 ### 🔄 In Progress
-- **Image Labeling**: 66/224 images labeled (29% complete)
-- **Total Bounding Boxes**: 213 cups detected
-- **Average Cups per Image**: 3.2 cups
+- **Image Labeling**: 147/224 images labeled (66% complete)
+- **Total Bounding Boxes**: 551 cups detected
+- **Average Cups per Image**: 3.7 cups
 - **Model Training**: Pending completion of dataset labeling
 
 ### 📋 To Do
-- Complete labeling of remaining 158 images
+- Complete labeling of remaining 77 images
 - Train YOLO model on labeled dataset
 - Integrate vision system with robot control
 - Implement cup stacking algorithm
@@ -78,7 +81,16 @@ labelImg dataset/images dataset/classes.txt dataset/labels
 labelme dataset/images --output dataset/labels --labels dataset/classes.txt
 ```
 
-#### Option C: Convert Existing Labels
+#### Option C: AI-Powered Auto-Labeling
+For faster labeling, consider AI-powered options:
+```bash
+python auto_labeling.py
+```
+- **Roboflow**: Upload images for automatic cup detection
+- **LabelMe AI**: AI-assisted labeling with suggestions
+- **Template Matching**: Use existing labels as templates
+
+#### Option D: Convert Existing Labels
 If you have XML or JSON labels, convert them to YOLO format:
 ```bash
 # Convert XML to YOLO
@@ -94,6 +106,12 @@ Check your labeling progress and quality:
 python validate_labels.py
 ```
 
+### 5. Check Bounding Box Quality
+Analyze the tightness and quality of your bounding boxes:
+```bash
+python check_box_quality.py
+```
+
 ## Labeling Guidelines
 
 ### Single Cups
@@ -105,6 +123,12 @@ python validate_labels.py
 - **Recommended**: Label each cup individually
 - Draw separate boxes for bottom, middle, and top cups
 - Useful for precise robot positioning
+
+### Bounding Box Quality
+- **Include entire cup** (top to bottom, side to side)
+- **Minimize background** around the cup
+- **Don't cut off** any part of the cup
+- **Aim for 5-15%** of image area per cup
 
 ### YOLO Format
 Each label file (`.txt`) contains:
@@ -143,6 +167,8 @@ python src/main.py
 - **Automated pyramid stacking** sequence
 - **Dataset management** tools
 - **Label validation** and quality checking
+- **AI-powered auto-labeling** options
+- **Bounding box quality analysis**
 
 ## Requirements
 - Python 3.8+
