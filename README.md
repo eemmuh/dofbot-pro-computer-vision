@@ -7,7 +7,9 @@ This project implements an automated cup stacking system using the DOFBOT Pro ro
 cup-stacking-project/
 ├── dataset/
 │   ├── images/          # Cup images for training (224 images)
-│   ├── labels/          # YOLO format labels
+│   ├── labels/          # YOLO format labels (COMPLETE)
+│   ├── train/           # Training split (179 images)
+│   ├── valid/           # Validation split (45 images)
 │   └── backup/          # Backup files
 ├── src/
 │   ├── vision/
@@ -17,12 +19,15 @@ cup-stacking-project/
 │   └── main.py
 ├── yolo-cup.cfg         # YOLO configuration file
 ├── cup.names            # Class names for YOLO
+├── cup.data             # Training data configuration
+├── yolov4.weights       # Pre-trained weights (250MB)
 ├── requirements.txt
 ├── xml_to_yolo.py       # Convert XML to YOLO format
 ├── labelme_to_yolo.py   # Convert LabelMe JSON to YOLO
 ├── validate_labels.py   # Validate and analyze labels
 ├── auto_labeling.py     # AI-powered auto-labeling options
 ├── check_box_quality.py # Analyze bounding box quality
+├── prepare_training.py  # Prepare dataset for training
 └── README.md
 ```
 
@@ -30,21 +35,23 @@ cup-stacking-project/
 
 ### ✅ Completed
 - **Dataset Preparation**: 224 cup images renamed sequentially (`cup_001.jpg` to `cup_224.jpg`)
-- **Labeling Setup**: Tools configured for YOLO format labeling
+- **Image Labeling**: 224/224 images labeled (100% complete!)
+- **Total Bounding Boxes**: 1,025 cups detected
+- **Average Cups per Image**: 4.6 cups
+- **Dataset Split**: 179 training, 45 validation images
+- **Training Preparation**: Dataset ready for YOLO training
 - **YOLO Configuration**: Single-class cup detection model configured
 - **Label Conversion**: XML to YOLO format conversion script ready
 - **Validation Tools**: Scripts to check label quality and statistics
 - **Auto-Labeling Options**: Multiple AI-powered labeling solutions available
 
 ### 🔄 In Progress
-- **Image Labeling**: 147/224 images labeled (66% complete)
-- **Total Bounding Boxes**: 551 cups detected
-- **Average Cups per Image**: 3.7 cups
-- **Model Training**: Pending completion of dataset labeling
+- **Model Training**: Ready to start YOLO training
+- **Robot Integration**: Pending model completion
 
 ### 📋 To Do
-- Complete labeling of remaining 77 images
 - Train YOLO model on labeled dataset
+- Test model performance on validation set
 - Integrate vision system with robot control
 - Implement cup stacking algorithm
 
@@ -60,85 +67,64 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Dataset Preparation
-The project includes 224 cup images that have been renamed sequentially:
-- `cup_001.jpg` to `cup_224.jpg`
-- Images are ready for labeling
+### 2. Dataset Status
+The dataset is **COMPLETE** and ready for training:
+- **224 images** with YOLO format labels
+- **1,025 total cups** detected across all images
+- **4.6 cups per image** average (excellent variety)
+- **Train/Validation split**: 179/45 images
 
-### 3. Labeling Images
+### 3. Training Setup
 
-#### Option A: LabelImg (GUI Tool)
+#### Option A: Use Prepared Dataset (Recommended)
 ```bash
-labelImg dataset/images dataset/classes.txt dataset/labels
+# Dataset is already prepared and ready
+python validate_labels.py  # Check final statistics
 ```
-- Press `W` to create bounding box
-- Type "cup" when prompted
-- Press `D` for next image
-- **Note**: Ensure format is set to YOLO (not XML/JSON)
 
-#### Option B: LabelMe (Alternative GUI Tool)
+#### Option B: Manual Training Setup
 ```bash
-labelme dataset/images --output dataset/labels --labels dataset/classes.txt
+# Prepare dataset for training
+python prepare_training.py
 ```
 
-#### Option C: AI-Powered Auto-Labeling
-For faster labeling, consider AI-powered options:
+### 4. Start YOLO Training
 ```bash
-python auto_labeling.py
-```
-- **Roboflow**: Upload images for automatic cup detection
-- **LabelMe AI**: AI-assisted labeling with suggestions
-- **Template Matching**: Use existing labels as templates
+# Install Darknet
+git clone https://github.com/AlexeyAB/darknet.git
+cd darknet && make
 
-#### Option D: Convert Existing Labels
-If you have XML or JSON labels, convert them to YOLO format:
+# Start training (from project root)
+./darknet detector train cup.data yolo-cup.cfg yolov4.weights
+```
+
+### 5. Monitor Training
+- **Check loss values** (should decrease over time)
+- **Weights saved** every 1000 iterations in `backup/` folder
+- **Stop when loss plateaus** (usually 2000-4000 iterations)
+- **Expected training time**: 2-6 hours
+
+### 6. Test Your Model
 ```bash
-# Convert XML to YOLO
-python xml_to_yolo.py
-
-# Convert LabelMe JSON to YOLO
-python labelme_to_yolo.py
+# Test on validation images
+./darknet detector test cup.data yolo-cup.cfg backup/yolo-cup_final.weights
 ```
 
-### 4. Validate Labels
-Check your labeling progress and quality:
-```bash
-python validate_labels.py
-```
+## Dataset Statistics
 
-### 5. Check Bounding Box Quality
-Analyze the tightness and quality of your bounding boxes:
-```bash
-python check_box_quality.py
-```
+### **Final Dataset Quality:**
+- **Total Images**: 224
+- **Labeled Images**: 224 (100%)
+- **Total Cups Detected**: 1,025
+- **Average Cups per Image**: 4.6
+- **Training Split**: 179 images (80%)
+- **Validation Split**: 45 images (20%)
 
-## Labeling Guidelines
-
-### Single Cups
-- Draw tight bounding boxes around each cup
-- Include the entire cup in the box
-- Be consistent with labeling style
-
-### Stacked Cups
-- **Recommended**: Label each cup individually
-- Draw separate boxes for bottom, middle, and top cups
-- Useful for precise robot positioning
-
-### Bounding Box Quality
-- **Include entire cup** (top to bottom, side to side)
-- **Minimize background** around the cup
-- **Don't cut off** any part of the cup
-- **Aim for 5-15%** of image area per cup
-
-### YOLO Format
-Each label file (`.txt`) contains:
-```
-0 0.543184 0.453606 0.604575 0.453431
-```
-Where:
-- `0` = class ID (cup)
-- `0.543184 0.453606` = center coordinates (normalized 0-1)
-- `0.604575 0.453431` = width and height (normalized 0-1)
+### **Labeling Quality:**
+- **Consistent YOLO format** throughout
+- **High-resolution images**: 4284x5712
+- **Varied cup arrangements**: single, stacked, scattered
+- **Professional labeling standards**
 
 ## YOLO Configuration
 
@@ -147,21 +133,27 @@ The project uses a single-class YOLO model:
 - **Input size**: 416x416
 - **Configuration**: `yolo-cup.cfg`
 - **Class names**: `cup.names`
+- **Pre-trained weights**: `yolov4.weights` (250MB)
 
 ## Usage
 
-### Training (After labeling is complete)
+### Training
 ```bash
-# Train YOLO model (requires Darknet)
-./darknet detector train data/cup.data yolo-cup.cfg darknet53.conv.74
+# Start training with transfer learning
+./darknet detector train cup.data yolo-cup.cfg yolov4.weights
 ```
 
 ### Inference
 ```bash
+# Test model on images
+./darknet detector test cup.data yolo-cup.cfg backup/yolo-cup_final.weights
+
+# Run robot vision system
 python src/main.py
 ```
 
 ## Features
+- **Complete dataset** with 1,025 labeled cups
 - **Real-time cup detection** using YOLO
 - **Precise robotic arm control** for cup manipulation
 - **Automated pyramid stacking** sequence
@@ -169,20 +161,23 @@ python src/main.py
 - **Label validation** and quality checking
 - **AI-powered auto-labeling** options
 - **Bounding box quality analysis**
+- **Training preparation** pipeline
 
 ## Requirements
 - Python 3.8+
 - OpenCV
-- PyTorch (for training)
+- Darknet (for YOLO training)
 - DOFBOT Pro robot arm
 - USB camera
-- LabelImg or LabelMe (for labeling)
 
-## Contributing
-1. Label images following the guidelines
-2. Use the validation tools to check quality
-3. Convert any non-YOLO format labels
-4. Update progress in this README
+## Training Progress
+- **Dataset**: ✅ Complete (224/224 images)
+- **Preparation**: ✅ Complete (train/valid split)
+- **Configuration**: ✅ Complete (YOLO config ready)
+- **Training**: 🔄 Ready to start
+- **Testing**: 📋 Pending training completion
+- **Integration**: 📋 Pending model testing
 
 ## License
 MIT License
+

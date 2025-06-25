@@ -28,6 +28,11 @@ dataset/images/
 dataset/labels/
 dataset/backup/
 
+# Training data and splits
+dataset/train/
+dataset/valid/
+*.data
+
 # Model weights and trained models
 *.weights
 *.pt
@@ -36,15 +41,25 @@ dataset/backup/
 *.h5
 *.hdf5
 *.pkl
+yolov4.weights
+yolov4-tiny.weights
+darknet53.conv.74
 
 # Video files
 *.mp4
 *.avi
 
-# Training outputs
+# Training outputs and logs
 runs/
 outputs/
 checkpoints/
+backup/
+*.backup
+*.log
+
+# Darknet specific
+darknet/
+*.cfg.backup
 
 # Temporary files
 temp/
@@ -54,5 +69,15 @@ tmp/
 
 # Configuration backups
 *.cfg.backup
+
+# Test results and predictions
+predictions/
+results/
+*.jpg.out
+*.png.out
+
+# Model evaluation files
+mAP/
+*.txt.out
 
 
