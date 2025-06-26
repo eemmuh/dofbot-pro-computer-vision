@@ -171,6 +171,5 @@ setup_*.py
 # Keep essential project files
 !src/
 !dataset/backup/
-!darknet/
 
 
