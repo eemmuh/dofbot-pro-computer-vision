@@ -1,55 +1,22 @@
-# Python
-venv/
-__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
+# Core dependencies for YOLOv4 cup detection
+opencv-python>=4.5.0
+numpy>=1.19.0
+torch>=1.8.0
+torchvision>=0.9.0
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Robot control
+pyserial>=3.5
 
-# Project specific
-*.weights
-*.pt
-*.pth
-*.onnx
-*.log
-*.mp4
-*.avi
-*.jpg
-*.jpeg
-*.png
-*.gif
+# Image processing
+Pillow>=8.0.0
 
-# Environment
-.env
+# Utilities
+pathlib2>=2.3.0
+tqdm>=4.60.0
 
-# Environment variables
-env/
-ENV/
+# Optional: GPU acceleration
+# torch-cuda>=1.8.0  # Uncomment if using CUDA
 
-# Logs and databases
-*.sqlite
-*.db
-
-# OS specific files
-.DS_Store
-Thumbs.db
-
-# Project specific
-*.bag*
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Model weights and datasets
-*.h5
-*.hdf5
-*.pkl
-datasets/
-models/
-
-
+# Development dependencies
+matplotlib>=3.3.0
+seaborn>=0.11.0 
