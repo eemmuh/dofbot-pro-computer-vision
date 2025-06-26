@@ -1,25 +1,69 @@
-# Python virtual environment
+# Python
 venv/
 
-# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
 
-# IDE specific files
+# IDE
 .vscode/
+.idea/
 *.swp
 *.swo
 
-# Environment variables
+# Project specific
+*.weights
+*.pt
+*.pth
+*.onnx
+*.log
+*.mp4
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Environment
 .env
 
-# Logs
-*.log
+# Environment variables
+env/
+ENV/
+
+# Logs and databases
+*.sqlite
+*.db
 
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Project specific
+*.bag*
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model weights and datasets
+*.h5
+*.hdf5
+*.pkl
+datasets/
+models/
+
+# Darknet
+darknet/
+backup/
+*.weights
+
+# Training artifacts
+*.log
+*.txt
+!cup.names
+!cup.data
+!requirements.txt
 
 # ===== CUP STACKING PROJECT SPECIFIC =====
 
@@ -32,18 +76,6 @@ dataset/backup/
 dataset/train/
 dataset/valid/
 *.data
-
-# Model weights and trained models
-*.weights
-*.pt
-*.pth
-*.onnx
-*.h5
-*.hdf5
-*.pkl
-yolov4.weights
-yolov4-tiny.weights
-darknet53.conv.74
 
 # Video files
 *.mp4
@@ -79,5 +111,66 @@ results/
 # Model evaluation files
 mAP/
 *.txt.out
+
+# ===== ROS SPECIFIC =====
+
+# ROS build and devel directories
+build/
+devel/
+install/
+
+# ROS log files
+~/.ros/log/
+*.log
+
+# ROS bag files
+*.bag
+*.bag.active
+
+# ROS parameter files
+*.yaml.backup
+*.launch.backup
+
+# ===== DOFBOT SPECIFIC =====
+
+# DOFBOT temporary files
+test_*.py
+*_test.py
+*_diagnostic.py
+*_monitor.py
+*_connection.py
+check_*.py
+find_*.py
+configure_*.py
+setup_*.py
+
+# DOFBOT troubleshooting files
+*_TROUBLESHOOTING.md
+*_troubleshooting.md
+
+# ===== MODEL FILES =====
+
+# Large model weights (keep configs, exclude weights)
+*.weights
+*.pt
+*.pth
+*.onnx
+*.h5
+*.hdf5
+*.pkl
+
+# Keep essential config files
+!cup.names
+!cup.data
+!yolo-cup.cfg
+!requirements.txt
+!README.md
+
+# ===== EXCEPTIONS =====
+
+# Keep essential project files
+!src/
+!dataset/backup/
+!darknet/
 
 
