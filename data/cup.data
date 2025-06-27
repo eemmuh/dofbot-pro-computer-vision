@@ -1,0 +1,5 @@
+classes = 1
+train = ../dataset/train/train.txt
+valid = ../dataset/valid/valid.txt
+names = ../cup.names
+backup = ../backup/
