@@ -1,6 +1,5 @@
 # Python
 venv/
-
 __pycache__/
 *.py[cod]
 *$py.class
@@ -12,74 +11,34 @@ __pycache__/
 *.swp
 *.swo
 
-# Project specific
-*.weights
-*.pt
-*.pth
-*.onnx
-*.log
-*.mp4
-*.avi
-*.jpg
-*.jpeg
-*.png
-*.gif
-
 # Environment
 .env
-
-# Environment variables
 env/
 ENV/
-
-# Logs and databases
-*.sqlite
-*.db
 
 # OS specific files
 .DS_Store
 Thumbs.db
 
-# Project specific
-*.bag*
-
 # Jupyter Notebook
 .ipynb_checkpoints
-
-# Model weights and datasets
-*.h5
-*.hdf5
-*.pkl
-datasets/
-models/
-
-# Darknet
-darknet/
-backup/
-*.weights
-
-# Training artifacts
-*.log
-*.txt
-!cup.names
-!cup.data
-!requirements.txt
 
 # ===== CUP STACKING PROJECT SPECIFIC =====
 
 # Dataset files (large files that shouldn't be in git)
 dataset/images/
 dataset/labels/
-dataset/backup/
-
-# Training data and splits
 dataset/train/
 dataset/valid/
-*.data
 
-# Video files
-*.mp4
-*.avi
+# Model weights and large files
+*.weights
+*.pt
+*.pth
+*.onnx
+*.h5
+*.hdf5
+*.pkl
 
 # Training outputs and logs
 runs/
@@ -88,19 +47,14 @@ checkpoints/
 backup/
 *.backup
 *.log
+*.txt
+!cup.names
+!cup.data
+!requirements.txt
 
-# Darknet specific
-darknet/
-*.cfg.backup
-
-# Temporary files
-temp/
-tmp/
-*.tmp
-*.bak
-
-# Configuration backups
-*.cfg.backup
+# Video files
+*.mp4
+*.avi
 
 # Test results and predictions
 predictions/
@@ -112,6 +66,16 @@ results/
 mAP/
 *.txt.out
 
+# Training logs and charts
+chart.png
+chart_yolov4.png
+chart_yolov4_custom.png
+
+# Validation results
+results.txt
+results_yolov4.txt
+results_yolov4_custom.txt
+
 # ===== ROS SPECIFIC =====
 
 # ROS build and devel directories
@@ -121,15 +85,10 @@ install/
 
 # ROS log files
 ~/.ros/log/
-*.log
 
 # ROS bag files
 *.bag
 *.bag.active
-
-# ROS parameter files
-*.yaml.backup
-*.launch.backup
 
 # ===== DOFBOT SPECIFIC =====
 
@@ -148,28 +107,55 @@ setup_*.py
 *_TROUBLESHOOTING.md
 *_troubleshooting.md
 
-# ===== MODEL FILES =====
+# ===== DARKNET SPECIFIC =====
 
-# Large model weights (keep configs, exclude weights)
-*.weights
-*.pt
-*.pth
-*.onnx
-*.h5
-*.hdf5
-*.pkl
+# Darknet repository (separate git repo)
+darknet/
 
-# Keep essential config files
-!cup.names
-!cup.data
-!yolo-cup.cfg
-!requirements.txt
-!README.md
+# Darknet training artifacts
+*.cfg.backup
+
+# ===== SYSTEM MONITORING =====
+
+# System monitoring logs
+tegrastats.log
+nvidia-smi.log
+system_monitor.log
+memory_usage.log
+performance_*.log
+gpu_usage_*.log
+
+# Performance monitoring
+*.csv
+
+# ===== TEMPORARY FILES =====
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.bak
+
+# Crash dumps and core files
+core.*
+*.core
+*.dmp
 
 # ===== EXCEPTIONS =====
 
 # Keep essential project files
 !src/
-!dataset/backup/
+!cup.names
+!cup.data
+!yolo-cup.cfg
+!requirements.txt
+!README.md
+!auto_labeling.py
+!labelme_to_yolo.py
+!prepare_training.py
+!train_yolo.py
+!transfer_learning.py
+!validate_labels.py
+!xml_to_yolo.py
 
 

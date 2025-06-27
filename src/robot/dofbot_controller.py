@@ -89,7 +89,7 @@ class DOFBOTController:
                 if self.serial.in_waiting > 0:
                     response = self.read_response()
                     print(f"DOFBOT response: {response}")
-                    return True
+            return True
                 else:
                     return False
         except Exception as e:
@@ -131,7 +131,7 @@ class DOFBOTController:
         except Exception as e:
             print(f"Failed to read response: {e}")
             return ""
-        
+            
     def move_to_position(self, x: float, y: float, z: float):
         """
         Move the end effector to the specified position.
