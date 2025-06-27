@@ -17,10 +17,13 @@ cup-stacking-project/
 │   ├── robot/
 │   │   └── dofbot_controller.py
 │   └── main.py
-├── yolo-cup.cfg         # YOLO configuration file
+├── yolo-cup.cfg         # YOLO configuration file (memory optimized)
+├── yolo-cup-tiny.cfg    # Ultra-conservative config for low memory
 ├── cup.names            # Class names for YOLO
 ├── cup.data             # Training data configuration
 ├── yolov4.weights       # Pre-trained weights (250MB)
+├── train_yolo_optimized.sh  # Optimized training script for Jetson
+├── monitor_training.sh      # Memory monitoring script
 ├── requirements.txt
 ├── xml_to_yolo.py       # Convert XML to YOLO format
 ├── labelme_to_yolo.py   # Convert LabelMe JSON to YOLO
@@ -41,12 +44,13 @@ cup-stacking-project/
 - **Dataset Split**: 179 training, 45 validation images
 - **Training Preparation**: Dataset ready for YOLO training
 - **YOLO Configuration**: Single-class cup detection model configured
+- **Memory Optimization**: Configurations optimized for Jetson Orin NX
 - **Label Conversion**: XML to YOLO format conversion script ready
 - **Validation Tools**: Scripts to check label quality and statistics
 - **Auto-Labeling Options**: Multiple AI-powered labeling solutions available
 
 ### 🔄 In Progress
-- **Model Training**: Ready to start YOLO training
+- **Model Training**: Ready to start YOLO training with memory optimization
 - **Robot Integration**: Pending model completion
 
 ### 📋 To Do
@@ -88,27 +92,69 @@ python validate_labels.py  # Check final statistics
 python prepare_training.py
 ```
 
-### 4. Start YOLO Training
+### 4. Start YOLO Training (Jetson Optimized)
+
+#### Memory-Optimized Training (Recommended)
+```bash
+# Use the optimized training script
+./train_yolo_optimized.sh
+```
+
+#### Manual Training with Memory Management
 ```bash
 # Install Darknet
 git clone https://github.com/AlexeyAB/darknet.git
 cd darknet && make
 
-# Start training (from project root)
-./darknet detector train cup.data yolo-cup.cfg yolov4.weights
+# Clear GPU memory first
+sudo fuser -v /dev/nvidia* 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null || true
+
+# Start training with optimized config
+cd darknet
+./darknet detector train ../data/cup.data ../cfg/yolo-cup.cfg yolov4.weights
+```
+
+#### If Still Running Out of Memory
+```bash
+# Use ultra-conservative configuration
+cd darknet
+./darknet detector train ../data/cup.data ../cfg/yolo-cup-tiny.cfg yolov4.weights
 ```
 
 ### 5. Monitor Training
+```bash
+# Monitor system resources during training
+./monitor_training.sh
+```
+
 - **Check loss values** (should decrease over time)
 - **Weights saved** every 1000 iterations in `backup/` folder
 - **Stop when loss plateaus** (usually 2000-4000 iterations)
-- **Expected training time**: 2-6 hours
+- **Expected training time**: 4-8 hours (Jetson optimized)
 
 ### 6. Test Your Model
 ```bash
 # Test on validation images
-./darknet detector test cup.data yolo-cup.cfg backup/yolo-cup_final.weights
+cd darknet
+./darknet detector test ../data/cup.data ../cfg/yolo-cup.cfg ../backup/yolo-cup_final.weights
 ```
+
+## Memory Optimization for Jetson Orin NX
+
+### Configuration Changes Made:
+- **Batch size**: Reduced from 16 to 4 (or 2 for tiny config)
+- **Subdivisions**: Reduced from 8 to 4 (or 2 for tiny config)
+- **Image size**: Reduced from 416x416 to 320x320 (or 256x256 for tiny)
+- **Memory management**: Added GPU memory clearing
+- **Environment variables**: Set for better CUDA memory handling
+
+### Available Configurations:
+1. **yolo-cup.cfg**: Standard optimized (batch=4, 320x320)
+2. **yolo-cup-tiny.cfg**: Ultra-conservative (batch=2, 256x256)
+
+### Memory Requirements:
+- **Standard config**: ~4GB RAM, ~6GB GPU memory
+- **Tiny config**: ~2GB RAM, ~4GB GPU memory
 
 ## Dataset Statistics
 
@@ -128,25 +174,31 @@ cd darknet && make
 
 ## YOLO Configuration
 
-The project uses a single-class YOLO model:
+The project uses a single-class YOLO model optimized for Jetson Orin NX:
 - **Classes**: 1 (cup)
-- **Input size**: 416x416
-- **Configuration**: `yolo-cup.cfg`
+- **Input size**: 320x320 (optimized) or 256x256 (tiny)
+- **Configuration**: `yolo-cup.cfg` or `yolo-cup-tiny.cfg`
 - **Class names**: `cup.names`
 - **Pre-trained weights**: `yolov4.weights` (250MB)
+- **Memory optimized**: Batch size and image dimensions reduced
 
 ## Usage
 
 ### Training
 ```bash
-# Start training with transfer learning
-./darknet detector train cup.data yolo-cup.cfg yolov4.weights
+# Use optimized training script (recommended)
+./train_yolo_optimized.sh
+
+# Or manual training
+cd darknet
+./darknet detector train ../data/cup.data ../cfg/yolo-cup.cfg yolov4.weights
 ```
 
 ### Inference
 ```bash
 # Test model on images
-./darknet detector test cup.data yolo-cup.cfg backup/yolo-cup_final.weights
+cd darknet
+./darknet detector test ../data/cup.data ../cfg/yolo-cup.cfg ../backup/yolo-cup_final.weights
 
 # Run robot vision system
 python src/main.py
@@ -162,6 +214,8 @@ python src/main.py
 - **AI-powered auto-labeling** options
 - **Bounding box quality analysis**
 - **Training preparation** pipeline
+- **Memory optimization** for Jetson Orin NX
+- **Resource monitoring** during training
 
 ## Requirements
 - Python 3.8+
@@ -169,14 +223,29 @@ python src/main.py
 - Darknet (for YOLO training)
 - DOFBOT Pro robot arm
 - USB camera
+- Jetson Orin NX (8GB RAM recommended)
 
 ## Training Progress
 - **Dataset**: ✅ Complete (224/224 images)
 - **Preparation**: ✅ Complete (train/valid split)
-- **Configuration**: ✅ Complete (YOLO config ready)
-- **Training**: 🔄 Ready to start
+- **Configuration**: ✅ Complete (YOLO config ready, memory optimized)
+- **Training**: 🔄 Ready to start (memory optimized)
 - **Testing**: 📋 Pending training completion
 - **Integration**: 📋 Pending model testing
+
+## Troubleshooting
+
+### Memory Issues During Training
+1. **Use optimized script**: `./train_yolo_optimized.sh`
+2. **Try tiny config**: `yolo-cup-tiny.cfg`
+3. **Monitor resources**: `./monitor_training.sh`
+4. **Clear GPU memory**: Restart system if needed
+
+### Training Killed by System
+- Reduce batch size further in config file
+- Use smaller image dimensions
+- Close other applications
+- Monitor memory usage with provided script
 
 ## License
 MIT License
