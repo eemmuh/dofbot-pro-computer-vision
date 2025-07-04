@@ -89,7 +89,7 @@ class DOFBOTController:
                 if self.serial.in_waiting > 0:
                     response = self.read_response()
                     print(f"DOFBOT response: {response}")
-            return True
+                    return True
                 else:
                     return False
         except Exception as e:

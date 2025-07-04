@@ -1,40 +1,40 @@
 #!/bin/bash
 
-echo "Monitoring system resources during YOLO training..."
+echo "🎯 Monitoring YOLO Training Progress for Jetson Orin NX"
 echo "Press Ctrl+C to stop monitoring"
 echo ""
 
 while true; do
     echo "=== $(date) ==="
     
-    # Memory usage
-    echo "Memory Usage:"
-    free -h | grep -E "Mem|Swap"
-    
-    # GPU and system stats using tegrastats (Jetson-specific)
-    echo ""
-    echo "GPU and System Stats (tegrastats):"
-    timeout 2 tegrastats | tail -1 | sed 's/^/  /'
-    
-    # CPU usage
-    echo ""
-    echo "CPU Usage:"
-    top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1
-    
-    # Check if darknet process is running
-    if pgrep -f "darknet" > /dev/null; then
-        echo ""
-        echo "Darknet process is running (PID: $(pgrep -f darknet))"
+    # Check if training is still running
+    if pgrep -f "darknet.*train" > /dev/null; then
+        echo "✅ Training is running"
+        
+        # Show recent log entries with training progress
+        if [ -f "training.log" ]; then
+            echo "📊 Recent training log (last 15 lines):"
+            tail -15 training.log | grep -E "(iteration|avg loss|mAP|saving)" || echo "No recent training data yet..."
+        fi
+        
+        # Show system resources (Jetson-compatible)
+        echo "💻 System resources:"
+        echo "CPU Load: $(uptime | awk -F'load average:' '{print $2}')"
+        echo "Memory: $(free -h | grep Mem | awk '{print $3"/"$2 " (" $3/$2*100 "%)"}')"
         
         # Show darknet process details
-        echo "Darknet process details:"
-        ps aux | grep darknet | grep -v grep | awk '{print "  PID:", $2, "CPU:", $3"%", "MEM:", $4"%", "CMD:", $11}'
+        echo "🔧 Darknet process:"
+        ps aux | grep darknet | grep -v grep | awk '{print "  PID:", $2, "CPU:", $3"%", "MEM:", $4"%", "Runtime:", $10}'
+        
     else
-        echo ""
-        echo "WARNING: Darknet process not found!"
+        echo "❌ Training process not found"
+        break
     fi
     
     echo ""
+    echo "⏳ Waiting 30 seconds for next update..."
     echo "----------------------------------------"
-    sleep 5
-done 
+    sleep 30
+done
+
+echo "Training monitoring stopped" 

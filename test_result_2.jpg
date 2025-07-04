@@ -1,0 +1,9 @@
+[
+{
+ "frame_id":1, 
+ "filename":"../dataset/valid/images/cup_010.jpg", 
+ "objects": [ 
+  {"class_id":0, "name":"cup", "relative_coordinates":{"center_x":0.520953, "center_y":0.469907, "width":0.399505, "height":0.442614}, "confidence":0.999523}
+ ] 
+}
+]
