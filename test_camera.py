@@ -1,6 +1,6 @@
 import cv2
 
-cap = cv2.VideoCapture(0)  # Try 0, or 1 if you have multiple cameras
+cap = cv2.VideoCapture(1)  # Try 0, or 1 if you have multiple cameras
 if not cap.isOpened():
     print("❌ Could not open camera (/dev/video0)")
     exit(1)

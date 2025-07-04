@@ -2,6 +2,43 @@
 
 This project implements an automated cup stacking system using the DOFBOT Pro robot arm. The system uses computer vision for cup detection and precise robotic control for stacking cups in a pyramid formation.
 
+---
+
+## 🚀 Project Status (June 2024)
+
+- **Model Training:** Complete (YOLO model trained and validated)
+- **Detection:** Real-time detection working with Darknet on Jetson Orin NX
+- **Accuracy:** High (100% confidence on clear cup images)
+- **Robot Integration:** Next step
+- **Stacking Algorithm:** Next step
+
+---
+
+## 🏆 Sample Detection Result
+
+Below is an example of a successful detection from the trained model:
+
+```
+[Image: Cup detected with bounding box and label 'cup: 100']
+```
+- The model detects cups with high confidence (100%) and accurate bounding boxes.
+- Real-time detection is fast and reliable using Darknet.
+
+---
+
+## Next Steps
+
+1. **Integrate vision system with DOFBOT robot arm**
+   - Use detected cup positions to guide the robot for picking and stacking.
+2. **Implement stacking algorithm**
+   - Plan and execute stacking sequences (e.g., pyramid, tower).
+3. **Test full pipeline**
+   - Camera → Detection → Robot movement → Stacking
+4. **Document and demo**
+   - Record video, update documentation, and prepare for presentation or deployment.
+
+---
+
 ## Project Structure
 ```
 cup-stacking-project/
