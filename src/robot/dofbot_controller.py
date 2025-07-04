@@ -302,3 +302,12 @@ class DOFBOTController:
         print("Stacking sequence completed!")
         
         return True 
+
+if __name__ == "__main__":
+    print("Testing DOFBOT connection...")
+    robot = DOFBOTController()
+    if robot.connect():
+        print("✅ DOFBOT connection test successful!")
+        robot.disconnect()
+    else:
+        print("❌ DOFBOT connection test failed.") 
