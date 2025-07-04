@@ -1,13 +1,14 @@
 import cv2
 import numpy as np
-import torch
-from typing import List, Tuple, Optional
+import subprocess
+import tempfile
 import os
+from typing import List, Tuple, Optional
 
 class CupDetector:
     def __init__(self, model_path: str, conf_threshold: float = 0.5, nms_threshold: float = 0.4):
         """
-        Initialize the cup detector with YOLO model.
+        Initialize the cup detector with YOLO model using Darknet.
         
         Args:
             model_path: Path to the YOLO model weights
@@ -16,26 +17,26 @@ class CupDetector:
         """
         self.conf_threshold = conf_threshold
         self.nms_threshold = nms_threshold
-        self.model = self._load_model(model_path)
+        self.model_path = model_path
         self.class_names = ['cup']
         
-    def _load_model(self, model_path: str):
-        """Load the YOLO model using OpenCV DNN."""
+        # Verify model files exist
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model weights not found: {model_path}")
-            
-        # Load YOLO model using OpenCV DNN
-        net = cv2.dnn.readNetFromDarknet("yolo-cup.cfg", model_path)
         
-        # Use GPU if available
-        net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-        net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+        # Get the directory containing the model for config file
+        model_dir = os.path.dirname(model_path)
+        config_path = os.path.join(model_dir, "yolo-cup-memory-optimized.cfg")
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Config file not found: {config_path}")
         
-        return net
+        self.config_path = config_path
+        self.names_path = os.path.join(model_dir, "cup.names")
+        self.data_path = os.path.join(model_dir, "cup.data")
     
     def detect_cups(self, frame: np.ndarray) -> List[Tuple[int, int, int, int, float]]:
         """
-        Detect cups in the given frame.
+        Detect cups in the given frame using Darknet.
         
         Args:
             frame: Input image frame
@@ -43,50 +44,81 @@ class CupDetector:
         Returns:
             List of detections in format (x, y, w, h, confidence)
         """
-        height, width = frame.shape[:2]
+        # Save frame to temporary file
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+            cv2.imwrite(tmp_file.name, frame)
+            temp_image_path = tmp_file.name
         
-        # Create blob from image
-        blob = cv2.dnn.blobFromImage(frame, 1/255.0, (416, 416), swapRB=True, crop=False)
-        self.model.setInput(blob)
+        try:
+            # Run Darknet detection
+            cmd = [
+                "./darknet", "detect", self.config_path, self.model_path, temp_image_path,
+                "-thresh", str(self.conf_threshold)
+            ]
+            
+            # Change to darknet directory for execution
+            darknet_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "darknet")
+            result = subprocess.run(cmd, cwd=darknet_dir, capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                print(f"Darknet error: {result.stderr}")
+                return []
+            
+            # Parse Darknet output
+            detections = self._parse_darknet_output(result.stdout, frame.shape)
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_image_path):
+                os.unlink(temp_image_path)
         
-        # Get detections
-        layer_names = self.model.getLayerNames()
-        output_layers = [layer_names[i - 1] for i in self.model.getUnconnectedOutLayers()]
-        outputs = self.model.forward(output_layers)
+        return detections
+    
+    def _parse_darknet_output(self, output: str, frame_shape: Tuple[int, ...]) -> List[Tuple[int, int, int, int, float]]:
+        """
+        Parse Darknet detection output.
         
-        # Process detections
-        boxes = []
-        confidences = []
-        
-        for output in outputs:
-            for detection in output:
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                
-                if confidence > self.conf_threshold:
-                    center_x = int(detection[0] * width)
-                    center_y = int(detection[1] * height)
-                    w = int(detection[2] * width)
-                    h = int(detection[3] * height)
-                    
-                    x = int(center_x - w / 2)
-                    y = int(center_y - h / 2)
-                    
-                    boxes.append([x, y, w, h])
-                    confidences.append(float(confidence))
-        
-        # Apply non-maximum suppression
-        indices = cv2.dnn.NMSBoxes(boxes, confidences, self.conf_threshold, self.nms_threshold)
-        
+        Args:
+            output: Darknet stdout output
+            frame_shape: Original frame shape (height, width, channels)
+            
+        Returns:
+            List of detections in format (x, y, w, h, confidence)
+        """
         detections = []
-        if len(indices) > 0:
-            # Convert to numpy array and flatten if needed
-            indices = np.array(indices).flatten()
-            for i in indices:
-                x, y, w, h = boxes[i]
-                confidence = confidences[i]
-                detections.append((x, y, w, h, confidence))
+        height, width = frame_shape[:2]
+        
+        lines = output.strip().split('\n')
+        for line in lines:
+            if 'cup:' in line.lower() and '%' in line:
+                # Parse line like "cup: 76%"
+                parts = line.split(':')
+                if len(parts) >= 2:
+                    confidence_str = parts[1].strip().replace('%', '')
+                    try:
+                        confidence = float(confidence_str) / 100.0
+                        
+                        # Look for bounding box coordinates in previous lines
+                        # Darknet typically outputs coordinates before the class label
+                        for i, prev_line in enumerate(lines[:lines.index(line)]):
+                            if prev_line.strip() and all(c.isdigit() or c in '.-' for c in prev_line.strip()):
+                                coords = prev_line.strip().split()
+                                if len(coords) >= 4:
+                                    try:
+                                        center_x = float(coords[0]) * width
+                                        center_y = float(coords[1]) * height
+                                        w = float(coords[2]) * width
+                                        h = float(coords[3]) * height
+                                        
+                                        x = int(center_x - w / 2)
+                                        y = int(center_y - h / 2)
+                                        
+                                        detections.append((x, y, int(w), int(h), confidence))
+                                        break
+                                    except (ValueError, IndexError):
+                                        continue
+                    except ValueError:
+                        continue
         
         return detections
     
