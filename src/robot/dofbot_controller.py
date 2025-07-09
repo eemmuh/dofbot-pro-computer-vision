@@ -1,313 +1,334 @@
-import serial
+#!/usr/bin/env python3
+"""
+DOFBOT Pro Controller
+Comprehensive controller for the DOFBOT Pro robot arm
+"""
+
+import smbus2
 import time
-from typing import Tuple, List, Optional
-import numpy as np
-import glob
+import math
 
 class DOFBOTController:
-    def __init__(self, port: Optional[str] = None, baudrate: int = 115200):
+    def __init__(self, bus=0, address=0x50):
         """
-        Initialize the DOFBOT controller.
+        Initialize DOFBOT controller
         
         Args:
-            port: Serial port for DOFBOT communication (auto-detect if None)
-            baudrate: Baud rate for serial communication
+            bus (int): I2C bus number (usually 0)
+            address (int): I2C address of the servo controller
         """
-        self.port = port
-        self.baudrate = baudrate
-        self.serial: Optional[serial.Serial] = None
+        self.bus = bus
+        self.address = address
+        self.i2c = None
         self.connected = False
         
-        # Auto-detect DOFBOT port if not specified
-        if self.port is None:
-            self.port = self._find_dofbot_port()
+        # DOFBOT servo configuration
+        self.SERVO_ADDRESSES = {
+            1: 0x01,  # Base rotation
+            2: 0x02,  # Shoulder
+            3: 0x03,  # Elbow
+            4: 0x04,  # Wrist rotation
+            5: 0x05,  # Wrist pitch
+            6: 0x06   # Gripper
+        }
         
-    def _find_dofbot_port(self) -> str:
-        """Find the DOFBOT serial port automatically."""
-        # Common DOFBOT ports in order of preference
-        dofbot_ports = [
-            '/dev/ttyUSB0',    # Most common for USB DOFBOTs
-            '/dev/ttyACM0',    # Arduino-based DOFBOTs
-            '/dev/ttyUSB1',    # Alternative USB port
-            '/dev/ttyACM1',    # Alternative ACM port
-        ]
+        # Servo limits (degrees)
+        self.SERVO_LIMITS = {
+            1: (0, 180),    # Base rotation
+            2: (0, 180),    # Shoulder
+            3: (0, 180),    # Elbow
+            4: (0, 180),    # Wrist rotation
+            5: (0, 180),    # Wrist pitch
+            6: (0, 180)     # Gripper
+        }
         
-        # Check which ports exist
-        available_ports = []
-        for port in dofbot_ports:
-            if glob.glob(port):
-                available_ports.append(port)
+        # Home position
+        self.HOME_POSITION = {
+            1: 90,  # Base center
+            2: 90,  # Shoulder center
+            3: 90,  # Elbow center
+            4: 90,  # Wrist center
+            5: 90,  # Wrist pitch center
+            6: 90   # Gripper half open
+        }
         
-        if available_ports:
-            print(f"Found potential DOFBOT ports: {available_ports}")
-            return available_ports[0]
-        else:
-            print("⚠️  No common DOFBOT ports found. Using default /dev/ttyUSB0")
-            return '/dev/ttyUSB0'
+        # Current positions
+        self.current_positions = self.HOME_POSITION.copy()
         
-    def connect(self) -> bool:
-        """Connect to the DOFBOT."""
-        try:
-            print(f"Attempting to connect to DOFBOT on {self.port}...")
-            self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
-            self.connected = True
-            print(f"✅ Connected to DOFBOT on {self.port}")
-            
-            # Test if it's actually a DOFBOT by sending a test command
-            if self._test_dofbot_connection():
-                print("✅ DOFBOT is responding to commands")
-                return True
-            else:
-                print("⚠️  Connected to serial port but DOFBOT not responding")
-                print("   This might not be a DOFBOT or it's not powered on")
-                self.disconnect()
-                return False
-                
-        except Exception as e:
-            print(f"❌ Failed to connect to DOFBOT: {e}")
-            return False
+        self.connect()
     
-    def _test_dofbot_connection(self) -> bool:
-        """Test if the connected device is actually a DOFBOT."""
+    def connect(self):
+        """Connect to the I2C bus"""
         try:
-            if not self.serial:
-                return False
-                
-            # Send a simple status command
-            self.send_command("STATUS")
-            time.sleep(0.5)
-            
-            # Try to read response
-            if self.serial.in_waiting > 0:
-                response = self.read_response()
-                print(f"DOFBOT response: {response}")
-                return True
-            else:
-                # Try a different command
-                self.send_command("HOME")
-                time.sleep(0.5)
-                if self.serial.in_waiting > 0:
-                    response = self.read_response()
-                    print(f"DOFBOT response: {response}")
-                    return True
-                else:
-                    return False
-        except Exception as e:
-            print(f"Error testing DOFBOT connection: {e}")
-            return False
-            
-    def disconnect(self):
-        """Disconnect from the DOFBOT."""
-        if self.serial and self.serial.is_open:
-            self.serial.close()
-            self.connected = False
-            print("Disconnected from DOFBOT")
-            
-    def send_command(self, command: str) -> bool:
-        """Send a command to the DOFBOT."""
-        if not self.connected or not self.serial:
-            print("Not connected to DOFBOT")
-            return False
-            
-        try:
-            # Add newline to command
-            full_command = command + '\n'
-            self.serial.write(full_command.encode())
-            self.serial.flush()
+            self.i2c = smbus2.SMBus(self.bus)
+            self.connected = True
+            print(f"✅ Connected to DOFBOT Pro on I2C bus {self.bus}, address 0x{self.address:02X}")
             return True
         except Exception as e:
-            print(f"Failed to send command: {e}")
+            print(f"❌ Failed to connect to I2C bus {self.bus}: {e}")
+            self.connected = False
             return False
     
-    def read_response(self, timeout: float = 1.0) -> str:
-        """Read response from DOFBOT."""
-        if not self.connected or not self.serial:
-            return ""
+    def disconnect(self):
+        """Disconnect from I2C bus"""
+        if self.i2c:
+            self.i2c.close()
+            self.connected = False
+            print("🔌 Disconnected from DOFBOT Pro")
+    
+    def read_servo_position(self, servo_id):
+        """
+        Read servo position using DOFBOT protocol
+        
+        Args:
+            servo_id (int): Servo ID (1-6)
             
+        Returns:
+            int: Servo position in degrees, or None if failed
+        """
+        if not self.connected or not self.i2c or servo_id not in self.SERVO_ADDRESSES:
+            return None
+        
         try:
-            self.serial.timeout = timeout
-            response = self.serial.readline().decode().strip()
-            return response
+            # DOFBOT position read command
+            cmd = [0x01, self.SERVO_ADDRESSES[servo_id], 0x00]
+            self.i2c.write_i2c_block_data(self.address, 0x01, cmd)
+            time.sleep(0.01)
+            
+            # Read response (2 bytes)
+            data = self.i2c.read_i2c_block_data(self.address, 0x00, 2)
+            if len(data) >= 2:
+                # Convert to degrees (DOFBOT uses 0-1000 range)
+                raw_position = (data[0] << 8) | data[1]
+                position = int(raw_position * 180 / 1000)
+                self.current_positions[servo_id] = position
+                return position
+            
+            return None
+            
         except Exception as e:
-            print(f"Failed to read response: {e}")
-            return ""
-            
-    def move_to_position(self, x: float, y: float, z: float):
-        """
-        Move the end effector to the specified position.
-        
-        Args:
-            x: X coordinate
-            y: Y coordinate
-            z: Z coordinate
-        """
-        if not self.connected:
-            print("Not connected to DOFBOT")
-            return False
-            
-        # DOFBOT position command format: MOVE x y z
-        command = f"MOVE {x:.2f} {y:.2f} {z:.2f}"
-        print(f"Sending position command: {command}")
-        
-        success = self.send_command(command)
-        if success:
-            # Wait for movement to complete
-            time.sleep(2)
-            response = self.read_response()
-            if response:
-                print(f"DOFBOT response: {response}")
-        
-        return success
-        
-    def open_gripper(self):
-        """Open the gripper."""
-        if not self.connected:
-            print("Not connected to DOFBOT")
-            return False
-            
-        print("Opening gripper...")
-        command = "GRIPPER_OPEN"
-        success = self.send_command(command)
-        
-        if success:
-            time.sleep(1)
-            response = self.read_response()
-            if response:
-                print(f"Gripper response: {response}")
-        
-        return success
-        
-    def close_gripper(self):
-        """Close the gripper."""
-        if not self.connected:
-            print("Not connected to DOFBOT")
-            return False
-            
-        print("Closing gripper...")
-        command = "GRIPPER_CLOSE"
-        success = self.send_command(command)
-        
-        if success:
-            time.sleep(1)
-            response = self.read_response()
-            if response:
-                print(f"Gripper response: {response}")
-        
-        return success
+            print(f"❌ Error reading servo {servo_id}: {e}")
+            return None
     
-    def move_joint(self, joint_id: int, angle: float):
+    def set_servo_position(self, servo_id, position, speed=100):
         """
-        Move a specific joint to an angle.
+        Set servo position using DOFBOT protocol
         
         Args:
-            joint_id: Joint number (1-6)
-            angle: Target angle in degrees
+            servo_id (int): Servo ID (1-6)
+            position (int): Position in degrees (0-180)
+            speed (int): Movement speed (0-255)
+            
+        Returns:
+            bool: True if successful, False otherwise
         """
-        if not self.connected:
-            print("Not connected to DOFBOT")
+        if not self.connected or not self.i2c or servo_id not in self.SERVO_ADDRESSES:
             return False
+        
+        # Check limits
+        min_pos, max_pos = self.SERVO_LIMITS[servo_id]
+        position = max(min_pos, min(max_pos, position))
+        
+        try:
+            # Convert degrees to DOFBOT range (0-1000)
+            raw_position = int(position * 1000 / 180)
             
-        if joint_id < 1 or joint_id > 6:
-            print("Joint ID must be between 1 and 6")
+            # DOFBOT servo command format
+            cmd = [
+                0x01,                    # Command type
+                self.SERVO_ADDRESSES[servo_id],  # Servo address
+                (raw_position >> 8) & 0xFF,      # High byte
+                raw_position & 0xFF,             # Low byte
+                speed                           # Speed
+            ]
+            
+            self.i2c.write_i2c_block_data(self.address, 0x01, cmd)
+            time.sleep(0.01)
+            
+            # Update current position
+            self.current_positions[servo_id] = position
+            print(f"✅ Servo {servo_id} set to {position}°")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error setting servo {servo_id}: {e}")
             return False
-            
-        print(f"Moving joint {joint_id} to {angle} degrees...")
-        command = f"JOINT {joint_id} {angle:.2f}"
-        success = self.send_command(command)
-        
-        if success:
-            time.sleep(1)
-            response = self.read_response()
-            if response:
-                print(f"Joint response: {response}")
-        
-        return success
     
-    def home_position(self):
-        """Move to home position."""
-        if not self.connected:
-            print("Not connected to DOFBOT")
-            return False
-            
-        print("Moving to home position...")
-        command = "HOME"
-        success = self.send_command(command)
-        
-        if success:
-            time.sleep(3)
-            response = self.read_response()
-            if response:
-                print(f"Home response: {response}")
-        
-        return success
-        
-    def execute_stack_sequence(self, cup_positions: List[Tuple[float, float, float]]):
+    def set_gripper(self, open_percent):
         """
-        Execute the cup stacking sequence.
+        Set gripper position
         
         Args:
-            cup_positions: List of cup positions to stack
+            open_percent (int): 0 = closed, 100 = fully open
+            
+        Returns:
+            bool: True if successful, False otherwise
         """
-        if not self.connected:
-            print("Not connected to DOFBOT")
-            return False
-            
-        print(f"Executing stacking sequence for {len(cup_positions)} cups...")
-        
-        # Move to home position first
-        self.home_position()
-        
-        for i, (x, y, z) in enumerate(cup_positions):
-            print(f"Stacking cup {i+1}/{len(cup_positions)} at position ({x}, {y}, {z})")
-            
-            # Move to cup position
-            self.move_to_position(x, y, z + 10)  # Approach from above
-            time.sleep(1)
-            
-            # Open gripper
-            self.open_gripper()
+        # Convert percentage to servo position
+        position = int((100 - open_percent) * 180 / 100)
+        return self.set_servo_position(6, position)
+    
+    def home_all_servos(self):
+        """Move all servos to home position"""
+        print("🏠 Moving all servos to home position...")
+        for servo_id, position in self.HOME_POSITION.items():
+            self.set_servo_position(servo_id, position)
             time.sleep(0.5)
-            
-            # Move down to cup
-            self.move_to_position(x, y, z)
-            time.sleep(1)
-            
-            # Close gripper to grab cup
-            self.close_gripper()
-            time.sleep(1)
-            
-            # Lift cup
-            self.move_to_position(x, y, z + 50)
-            time.sleep(1)
-            
-            # Move to stack position (you'll need to define this)
-            stack_x, stack_y, stack_z = 150, 150, 50  # Example stack position
-            self.move_to_position(stack_x, stack_y, stack_z + 50)
-            time.sleep(1)
-            
-            # Lower to stack
-            self.move_to_position(stack_x, stack_y, stack_z)
-            time.sleep(1)
-            
-            # Release cup
-            self.open_gripper()
-            time.sleep(0.5)
-            
-            # Move up
-            self.move_to_position(stack_x, stack_y, stack_z + 50)
-            time.sleep(1)
         
-        # Return to home position
-        self.home_position()
-        print("Stacking sequence completed!")
+        print("✅ All servos moved to home position")
+    
+    def move_to_position(self, positions, speed=100):
+        """
+        Move multiple servos to specified positions
         
-        return True 
+        Args:
+            positions (dict): {servo_id: position, ...}
+            speed (int): Movement speed
+        """
+        print("🤖 Moving to specified positions...")
+        for servo_id, position in positions.items():
+            if servo_id in self.SERVO_ADDRESSES:
+                self.set_servo_position(servo_id, position, speed)
+                time.sleep(0.2)
+    
+    def cup_stacking_sequence(self):
+        """
+        Perform a simple cup stacking sequence
+        """
+        print("🥤 Starting cup stacking sequence...")
+        
+        # Step 1: Move to pickup position
+        pickup_pos = {
+            1: 90,   # Base center
+            2: 45,   # Shoulder down
+            3: 135,  # Elbow up
+            4: 90,   # Wrist center
+            5: 90    # Wrist pitch center
+        }
+        self.move_to_position(pickup_pos)
+        time.sleep(1)
+        
+        # Step 2: Open gripper
+        self.set_gripper(100)  # Fully open
+        time.sleep(0.5)
+        
+        # Step 3: Move down to cup
+        pickup_pos[2] = 30  # Lower shoulder more
+        pickup_pos[3] = 150  # Raise elbow more
+        self.move_to_position(pickup_pos)
+        time.sleep(1)
+        
+        # Step 4: Close gripper to grab cup
+        self.set_gripper(0)  # Close
+        time.sleep(1)
+        
+        # Step 5: Lift cup
+        pickup_pos[2] = 60  # Raise shoulder
+        pickup_pos[3] = 120  # Lower elbow
+        self.move_to_position(pickup_pos)
+        time.sleep(1)
+        
+        # Step 6: Move to stacking position
+        stack_pos = {
+            1: 180,  # Base rotate
+            2: 60,   # Shoulder
+            3: 120,  # Elbow
+            4: 90,   # Wrist center
+            5: 90    # Wrist pitch center
+        }
+        self.move_to_position(stack_pos)
+        time.sleep(1)
+        
+        # Step 7: Lower and release cup
+        stack_pos[2] = 45  # Lower shoulder
+        stack_pos[3] = 135  # Raise elbow
+        self.move_to_position(stack_pos)
+        time.sleep(1)
+        
+        self.set_gripper(100)  # Open gripper
+        time.sleep(0.5)
+        
+        # Step 8: Return to home
+        self.home_all_servos()
+        
+        print("✅ Cup stacking sequence completed!")
+    
+    def test_servos(self):
+        """Test all servos with small movements"""
+        print("🧪 Testing all servos...")
+        
+        for servo_id in range(1, 7):
+            if servo_id == 6:  # Gripper
+                print(f"Testing gripper (servo {servo_id})...")
+                self.set_gripper(50)  # Half open
+                time.sleep(1)
+                self.set_gripper(0)   # Closed
+                time.sleep(1)
+                self.set_gripper(100) # Open
+                time.sleep(1)
+            else:
+                print(f"Testing servo {servo_id}...")
+                current_pos = self.read_servo_position(servo_id)
+                print(f"  Current position: {current_pos}°")
+                
+                # Small movement test
+                self.set_servo_position(servo_id, 85)
+                time.sleep(0.5)
+                self.set_servo_position(servo_id, 95)
+                time.sleep(0.5)
+                self.set_servo_position(servo_id, 90)
+                time.sleep(0.5)
+        
+        print("✅ Servo test completed")
+    
+    def get_status(self):
+        """Get current status of all servos"""
+        print("📊 DOFBOT Pro Status:")
+        print("=" * 30)
+        
+        for servo_id in range(1, 7):
+            position = self.read_servo_position(servo_id)
+            if position is not None:
+                print(f"Servo {servo_id}: {position}°")
+            else:
+                print(f"Servo {servo_id}: Error reading position")
+    
+    def __del__(self):
+        """Cleanup on destruction"""
+        self.disconnect()
+
+def main():
+    """Test the DOFBOT controller"""
+    print("🤖 DOFBOT Pro Controller Test")
+    print("=" * 40)
+    
+    try:
+        # Initialize controller
+        controller = DOFBOTController(bus=0, address=0x50)
+        
+        if controller.connected:
+            # Get current status
+            controller.get_status()
+            
+            # Test servos
+            controller.test_servos()
+            
+            # Home position
+            controller.home_all_servos()
+            
+            # Ask user if they want to run cup stacking
+            response = input("\n🥤 Run cup stacking sequence? (y/n): ")
+            if response.lower() == 'y':
+                controller.cup_stacking_sequence()
+            
+            controller.disconnect()
+        else:
+            print("❌ Failed to connect to DOFBOT Pro")
+            
+    except KeyboardInterrupt:
+        print("\n⏹️ Test interrupted by user")
+    except Exception as e:
+        print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
-    print("Testing DOFBOT connection...")
-    robot = DOFBOTController()
-    if robot.connect():
-        print("✅ DOFBOT connection test successful!")
-        robot.disconnect()
-    else:
-        print("❌ DOFBOT connection test failed.") 
+    main() 

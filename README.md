@@ -4,7 +4,7 @@ This project implements an automated cup stacking system using the DOFBOT Pro ro
 
 ---
 
-## 🚀 Project Status (June 2024)
+## 🚀 Project Status (July 2025)
 
 - **Model Training:** Complete (YOLO model trained and validated)
 - **Detection:** Real-time detection working with Darknet on Jetson Orin NX
