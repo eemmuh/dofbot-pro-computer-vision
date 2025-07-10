@@ -13,10 +13,10 @@ try:
     import rospy
     import sys
     import os
-    
-    # Add ROS workspace to path
-    sys.path.append('/home/jetson/dofbot_ws/devel/lib/python3/dist-packages')
-    
+
+# Add ROS workspace to path
+sys.path.append('/home/jetson/dofbot_ws/devel/lib/python3/dist-packages')
+
     from dofbot_info.srv import kinemarics, kinemaricsRequest, kinemaricsResponse
     ROS_AVAILABLE = True
 except ImportError:
@@ -57,20 +57,20 @@ class ROSDOFBOTController:
             
         try:
             print("🔌 Initializing ROS for DOFBOT...")
-            
-            # Initialize ROS node
+        
+        # Initialize ROS node
             rospy.init_node('dofbot_cup_stacking_controller', anonymous=True)
             self.ros_initialized = True
-            
-            # Wait for ROS services to be available
+        
+        # Wait for ROS services to be available
             print("⏳ Waiting for DOFBOT ROS services...")
-            rospy.wait_for_service('/dofbot_kinemarics')
-            rospy.wait_for_service('/get_kinemarics')
-            
-            # Create service proxies
-            self.kinematics_service = rospy.ServiceProxy('/dofbot_kinemarics', kinemarics)
-            self.get_kinematics_service = rospy.ServiceProxy('/get_kinemarics', kinemarics)
-            
+        rospy.wait_for_service('/dofbot_kinemarics')
+        rospy.wait_for_service('/get_kinemarics')
+        
+        # Create service proxies
+        self.kinematics_service = rospy.ServiceProxy('/dofbot_kinemarics', kinemarics)
+        self.get_kinematics_service = rospy.ServiceProxy('/get_kinemarics', kinemarics)
+        
             # Test connection by getting current position
             if self.get_current_position():
                 self.connected = True
@@ -92,7 +92,7 @@ class ROSDOFBOTController:
         if self.ros_initialized:
             try:
                 rospy.signal_shutdown("DOFBOT controller shutting down")
-                self.connected = False
+        self.connected = False
                 print("✅ Disconnected from ROS")
             except Exception as e:
                 print(f"❌ Error disconnecting from ROS: {e}")
@@ -239,7 +239,7 @@ class ROSDOFBOTController:
             if not self.kinematics_service:
                 print("❌ Kinematics service not available")
                 return False
-                
+            
             # Clamp angles to joint limits
             clamped_angles = []
             for i, angle in enumerate(angles_degrees):
@@ -288,7 +288,7 @@ class ROSDOFBOTController:
         home_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         print("🏠 Moving to home position...")
         return self.move_all_servos(home_angles)
-    
+                
     def open_gripper(self):
         """Open the gripper (servo 6)."""
         print("🤏 Opening gripper...")
@@ -312,7 +312,7 @@ class ROSDOFBOTController:
         if not self.connected:
             print("❌ Not connected to DOFBOT")
             return False
-        
+    
         print(f"🎯 Moving to position ({x}, {y}, {z})")
         
         try:
@@ -335,7 +335,7 @@ class ROSDOFBOTController:
             
             if response:
                 print("✅ Position movement completed")
-                return True
+            return True
             else:
                 print("❌ Position movement failed")
                 return False
@@ -353,44 +353,44 @@ class ROSDOFBOTController:
         """
         if not self.connected:
             print("❌ Not connected to DOFBOT")
-            return False
+                return False
             
         print(f"🎯 Executing stacking sequence for {len(cup_positions)} cups...")
         
         # Move to home position first
         self.home_position()
-        time.sleep(2)
-        
+            time.sleep(2)
+            
         # Define stack position
         stack_x, stack_y, stack_z = 0.15, 0.15, 0.05  # In meters
         
-        for i, (x, y, z) in enumerate(cup_positions):
+            for i, (x, y, z) in enumerate(cup_positions):
             print(f"📦 Stacking cup {i+1}/{len(cup_positions)} at position ({x}, {y}, {z})")
-            
+                
             # Approach from above
             self.move_to_position(x, y, z + 0.03)
-            time.sleep(1)
-            
-            # Open gripper
+                time.sleep(1)
+                
+                # Open gripper
             self.open_gripper()
             time.sleep(0.5)
-            
-            # Move down to cup
+                
+                # Move down to cup
             self.move_to_position(x, y, z)
-            time.sleep(1)
-            
+                time.sleep(1)
+                
             # Close gripper to grab cup
             self.close_gripper()
-            time.sleep(1)
-            
+                time.sleep(1)
+                
             # Lift cup
             self.move_to_position(x, y, z + 0.05)
-            time.sleep(1)
-            
+                time.sleep(1)
+                
             # Move to stack position
             self.move_to_position(stack_x, stack_y, stack_z + 0.05)
-            time.sleep(1)
-            
+                time.sleep(1)
+                
             # Lower to stack
             self.move_to_position(stack_x, stack_y, stack_z)
             time.sleep(1)
@@ -416,15 +416,15 @@ class ROSDOFBOTController:
 if __name__ == "__main__":
     print("🤖 Testing ROS DOFBOT Controller...")
     robot = ROSDOFBOTController()
-    
+        
     if robot.connect():
         print("✅ Connection test successful!")
-        
-        # Test basic movements
+            
+            # Test basic movements
         print("\n🧪 Testing basic movements...")
         robot.home_position()
-        time.sleep(2)
-        
+            time.sleep(2)
+            
         robot.open_gripper()
         time.sleep(1)
         
@@ -432,5 +432,5 @@ if __name__ == "__main__":
         time.sleep(1)
         
         robot.disconnect()
-    else:
+        else:
         print("❌ Connection test failed.") 

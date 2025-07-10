@@ -63,19 +63,19 @@ class DOFBOTController:
             self.i2c = smbus2.SMBus(self.bus)
             self.connected = True
             print(f"✅ Connected to DOFBOT Pro on I2C bus {self.bus}, address 0x{self.address:02X}")
-            return True
+                return True
         except Exception as e:
             print(f"❌ Failed to connect to I2C bus {self.bus}: {e}")
             self.connected = False
             return False
-    
+            
     def disconnect(self):
         """Disconnect from I2C bus"""
         if self.i2c:
             self.i2c.close()
             self.connected = False
             print("🔌 Disconnected from DOFBOT Pro")
-    
+            
     def read_servo_position(self, servo_id):
         """
         Read servo position using DOFBOT protocol
@@ -88,7 +88,7 @@ class DOFBOTController:
         """
         if not self.connected or not self.i2c or servo_id not in self.SERVO_ADDRESSES:
             return None
-        
+            
         try:
             # DOFBOT position read command
             cmd = [0x01, self.SERVO_ADDRESSES[servo_id], 0x00]
@@ -109,7 +109,7 @@ class DOFBOTController:
         except Exception as e:
             print(f"❌ Error reading servo {servo_id}: {e}")
             return None
-    
+            
     def set_servo_position(self, servo_id, position, speed=100):
         """
         Set servo position using DOFBOT protocol
@@ -124,7 +124,7 @@ class DOFBOTController:
         """
         if not self.connected or not self.i2c or servo_id not in self.SERVO_ADDRESSES:
             return False
-        
+            
         # Check limits
         min_pos, max_pos = self.SERVO_LIMITS[servo_id]
         position = max(min_pos, min(max_pos, position))
@@ -153,7 +153,7 @@ class DOFBOTController:
         except Exception as e:
             print(f"❌ Error setting servo {servo_id}: {e}")
             return False
-    
+            
     def set_gripper(self, open_percent):
         """
         Set gripper position
@@ -206,7 +206,7 @@ class DOFBOTController:
             5: 90    # Wrist pitch center
         }
         self.move_to_position(pickup_pos)
-        time.sleep(1)
+            time.sleep(1)
         
         # Step 2: Open gripper
         self.set_gripper(100)  # Fully open
@@ -265,7 +265,7 @@ class DOFBOTController:
                 self.set_gripper(0)   # Closed
                 time.sleep(1)
                 self.set_gripper(100) # Open
-                time.sleep(1)
+            time.sleep(1)
             else:
                 print(f"Testing servo {servo_id}...")
                 current_pos = self.read_servo_position(servo_id)
@@ -277,8 +277,8 @@ class DOFBOTController:
                 self.set_servo_position(servo_id, 95)
                 time.sleep(0.5)
                 self.set_servo_position(servo_id, 90)
-                time.sleep(0.5)
-        
+            time.sleep(0.5)
+            
         print("✅ Servo test completed")
     
     def get_status(self):
