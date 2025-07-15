@@ -11,7 +11,7 @@ import numpy as np
 sys.path.append('src')
 
 from vision.cup_detector import CupDetector
-from robot.jetson_dofbot_controller import JetsonDOFBOTController
+from robot.ros_dofbot_controller import ROSDOFBOTController
 
 class CupStackingDemo:
     def __init__(self):
@@ -44,8 +44,8 @@ class CupStackingDemo:
             return False
         
         # Initialize robot
-        print("🤖 Initializing Jetson DOFBOT controller...")
-        self.robot = JetsonDOFBOTController()
+        print("🤖 Initializing ROS DOFBOT controller...")
+        self.robot = ROSDOFBOTController()
         if not self.robot.connect():
             print("❌ Error: Could not connect to DOFBOT")
             print("Please run 'python3 test_dofbot_connection.py' to test connection")

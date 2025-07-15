@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ROS DOFBOT Pro Controller
+DOFBOT Pro ROS Controller
 Controls the DOFBOT Pro using ROS (Robot Operating System)
 """
 
@@ -14,32 +14,31 @@ try:
     import sys
     import os
 
-    # Add ROS workspace to path
-    sys.path.append('/home/jetson/dofbot_ws/devel/lib/python3/dist-packages')
+    # Add DOFBOT Pro workspace to path
+    sys.path.append('/home/jetson/dofbot_pro_ws/devel/lib/python3/dist-packages')
 
-    from dofbot_info.srv import kinemarics, kinemaricsRequest, kinemaricsResponse
+    from dofbot_pro_info.srv import dofbot_pro_kinemarics, dofbot_pro_kinemaricsRequest, dofbot_pro_kinemaricsResponse
     ROS_AVAILABLE = True
 except ImportError:
     ROS_AVAILABLE = False
     print("⚠️  ROS not available - using simulation mode")
 
-class ROSDOFBOTController:
+class DOFBOTProController:
     def __init__(self):
         """
-        Initialize the ROS DOFBOT controller.
-        Uses the actual DOFBOT kinematics services.
+        Initialize the DOFBOT Pro controller.
+        Uses the actual DOFBOT Pro kinematics services.
         """
         self.connected = False
         self.ros_initialized = False
         
         # ROS service proxies
         self.kinematics_service = None
-        self.get_kinematics_service = None
         
         # Current joint positions (in degrees)
         self.current_positions = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         
-        # Joint limits (in degrees)
+        # Joint limits (in degrees) - DOFBOT Pro specific
         self.joint_limits = [
             (-180.0, 180.0),   # Base rotation
             (-90.0, 90.0),     # Shoulder
@@ -50,37 +49,35 @@ class ROSDOFBOTController:
         ]
         
     def connect(self) -> bool:
-        """Initialize ROS and connect to DOFBOT."""
+        """Initialize ROS and connect to DOFBOT Pro."""
         if not ROS_AVAILABLE:
-            print("❌ ROS not available - cannot control DOFBOT")
+            print("❌ ROS not available - cannot control DOFBOT Pro")
             return False
             
         try:
-            print("🔌 Initializing ROS for DOFBOT...")
+            print("🔌 Initializing ROS for DOFBOT Pro...")
             
             # Initialize ROS node
-            rospy.init_node('dofbot_cup_stacking_controller', anonymous=True)
+            rospy.init_node('dofbot_pro_cup_stacking_controller', anonymous=True)
             self.ros_initialized = True
             
-            # Wait for ROS services to be available
-            print("⏳ Waiting for DOFBOT ROS services...")
-            rospy.wait_for_service('/dofbot_kinemarics')
+            # Wait for DOFBOT Pro services to be available
+            print("⏳ Waiting for DOFBOT Pro ROS services...")
             rospy.wait_for_service('/get_kinemarics')
             
-            # Create service proxies
-            self.kinematics_service = rospy.ServiceProxy('/dofbot_kinemarics', kinemarics)
-            self.get_kinematics_service = rospy.ServiceProxy('/get_kinemarics', kinemarics)
+            # Create service proxy
+            self.kinematics_service = rospy.ServiceProxy('/get_kinemarics', dofbot_pro_kinemarics)
             
             # Test connection by getting current position
             if self.get_current_position():
                 self.connected = True
-                print("✅ Connected to DOFBOT via ROS")
+                print("✅ Connected to DOFBOT Pro via ROS")
                 
                 # Initialize to home position
                 self.initialize_servos()
                 return True
             else:
-                print("❌ Failed to get current position from DOFBOT")
+                print("❌ Failed to get current position from DOFBOT Pro")
                 return False
                 
         except Exception as e:
@@ -91,7 +88,7 @@ class ROSDOFBOTController:
         """Disconnect from ROS."""
         if self.ros_initialized:
             try:
-                rospy.signal_shutdown("DOFBOT controller shutting down")
+                rospy.signal_shutdown("DOFBOT Pro controller shutting down")
                 self.connected = False
                 print("✅ Disconnected from ROS")
             except Exception as e:
@@ -100,13 +97,13 @@ class ROSDOFBOTController:
     def get_current_position(self) -> Optional[Tuple[float, float, float]]:
         """Get current end effector position."""
         try:
-            if not self.get_kinematics_service:
+            if not self.kinematics_service:
                 print("❌ Kinematics service not available")
                 return None
                 
             # Create empty request to get current position
-            request = kinemaricsRequest()
-            response = self.get_kinematics_service(request)
+            request = dofbot_pro_kinemaricsRequest()
+            response = self.kinematics_service(request)
             if response:
                 return (response.x, response.y, response.z)
             return None
@@ -117,13 +114,13 @@ class ROSDOFBOTController:
     def get_current_joints(self) -> Optional[List[float]]:
         """Get current joint positions."""
         try:
-            if not self.get_kinematics_service:
+            if not self.kinematics_service:
                 print("❌ Kinematics service not available")
                 return None
                 
             # Create request to get current joint positions
-            request = kinemaricsRequest()
-            response = self.get_kinematics_service(request)
+            request = dofbot_pro_kinemaricsRequest()
+            response = self.kinematics_service(request)
             if response:
                 joints = [
                     response.joint1,
@@ -150,7 +147,7 @@ class ROSDOFBOTController:
             speed: Movement speed (0.1-1.0)
         """
         if not self.connected:
-            print("❌ Not connected to DOFBOT")
+            print("❌ Not connected to DOFBOT Pro")
             return False
             
         if servo_id < 1 or servo_id > 6:
@@ -175,7 +172,7 @@ class ROSDOFBOTController:
                 return False
             
             # Create kinematics request
-            request = kinemaricsRequest()
+            request = dofbot_pro_kinemaricsRequest()
             
             # Set target joint angle
             if servo_id == 1:
@@ -230,7 +227,7 @@ class ROSDOFBOTController:
             return False
             
         if not self.connected:
-            print("❌ Not connected to DOFBOT")
+            print("❌ Not connected to DOFBOT Pro")
             return False
         
         print(f"🤖 Moving all servos to angles: {angles_degrees}")
@@ -247,7 +244,7 @@ class ROSDOFBOTController:
                 clamped_angles.append(max(min_angle, min(max_angle, angle)))
             
             # Create kinematics request
-            request = kinemaricsRequest()
+            request = dofbot_pro_kinemaricsRequest()
             request.cur_joint1 = clamped_angles[0]
             request.cur_joint2 = clamped_angles[1]
             request.cur_joint3 = clamped_angles[2]
@@ -302,7 +299,7 @@ class ROSDOFBOTController:
     def move_to_position(self, x: float, y: float, z: float):
         """
         Move end effector to 3D position using inverse kinematics.
-        This uses the DOFBOT's built-in IK solver.
+        This uses the DOFBOT Pro's built-in IK solver.
         
         Args:
             x: X coordinate
@@ -310,7 +307,7 @@ class ROSDOFBOTController:
             z: Z coordinate
         """
         if not self.connected:
-            print("❌ Not connected to DOFBOT")
+            print("❌ Not connected to DOFBOT Pro")
             return False
     
         print(f"🎯 Moving to position ({x}, {y}, {z})")
@@ -321,7 +318,7 @@ class ROSDOFBOTController:
                 return False
                 
             # Create kinematics request for inverse kinematics
-            request = kinemaricsRequest()
+            request = dofbot_pro_kinemaricsRequest()
             request.tar_x = x
             request.tar_y = y
             request.tar_z = z
@@ -352,7 +349,7 @@ class ROSDOFBOTController:
             cup_positions: List of cup positions to stack
         """
         if not self.connected:
-            print("❌ Not connected to DOFBOT")
+            print("❌ Not connected to DOFBOT Pro")
             return False
             
         print(f"🎯 Executing stacking sequence for {len(cup_positions)} cups...")
@@ -414,8 +411,8 @@ class ROSDOFBOTController:
         return self.current_positions.copy()
 
 if __name__ == "__main__":
-    print("🤖 Testing ROS DOFBOT Controller...")
-    robot = ROSDOFBOTController()
+    print("🤖 Testing DOFBOT Pro Controller...")
+    robot = DOFBOTProController()
         
     if robot.connect():
         print("✅ Connection test successful!")

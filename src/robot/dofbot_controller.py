@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
 """
-DOFBOT Pro Controller
-Comprehensive controller for the DOFBOT Pro robot arm
+DOFBOT Pro Controller - Custom I2C Version
+Direct I2C communication with DOFBOT Pro hardware using correct bus/address
 """
 
-import smbus2
+# Fix smbus import issue
+import sys
+try:
+    import smbus2 as smbus
+    sys.modules['smbus'] = smbus
+    print("✅ smbus compatibility fixed")
+except ImportError:
+    print("❌ smbus2 not available")
+
 import time
 import math
 
 class DOFBOTController:
     def __init__(self, bus=0, address=0x50):
         """
-        Initialize DOFBOT controller
+        Initialize DOFBOT controller using direct I2C
         
         Args:
-            bus (int): I2C bus number (usually 0)
-            address (int): I2C address of the servo controller
+            bus (int): I2C bus number (0 for DOFBOT Pro)
+            address (int): I2C address (0x50 for DOFBOT Pro)
         """
         self.bus = bus
         self.address = address
@@ -39,7 +47,7 @@ class DOFBOTController:
             3: (0, 180),    # Elbow
             4: (0, 180),    # Wrist rotation
             5: (0, 180),    # Wrist pitch
-            6: (0, 180)     # Gripper
+            6: (30, 180)    # Gripper (DOFBOT Pro specific)
         }
         
         # Home position
@@ -49,7 +57,7 @@ class DOFBOTController:
             3: 90,  # Elbow center
             4: 90,  # Wrist center
             5: 90,  # Wrist pitch center
-            6: 90   # Gripper half open
+            6: 30   # Gripper closed
         }
         
         # Current positions
@@ -60,10 +68,10 @@ class DOFBOTController:
     def connect(self):
         """Connect to the I2C bus"""
         try:
-            self.i2c = smbus2.SMBus(self.bus)
+            self.i2c = smbus.SMBus(self.bus)
             self.connected = True
             print(f"✅ Connected to DOFBOT Pro on I2C bus {self.bus}, address 0x{self.address:02X}")
-                return True
+            return True
         except Exception as e:
             print(f"❌ Failed to connect to I2C bus {self.bus}: {e}")
             self.connected = False
@@ -71,7 +79,7 @@ class DOFBOTController:
             
     def disconnect(self):
         """Disconnect from I2C bus"""
-        if self.i2c:
+        if hasattr(self, 'i2c') and self.i2c:
             self.i2c.close()
             self.connected = False
             print("🔌 Disconnected from DOFBOT Pro")
@@ -164,9 +172,24 @@ class DOFBOTController:
         Returns:
             bool: True if successful, False otherwise
         """
-        # Convert percentage to servo position
-        position = int((100 - open_percent) * 180 / 100)
+        # Convert percentage to servo position (30-180 range for DOFBOT Pro)
+        position = int(30 + (open_percent * 150 / 100))
         return self.set_servo_position(6, position)
+    
+    def home_position(self):
+        """Move to home position"""
+        print("🏠 Moving to home position...")
+        return self.home_all_servos()
+    
+    def open_gripper(self):
+        """Open the gripper"""
+        print("🤏 Opening gripper...")
+        return self.set_gripper(100)
+    
+    def close_gripper(self):
+        """Close the gripper"""
+        print("🤏 Closing gripper...")
+        return self.set_gripper(0)
     
     def home_all_servos(self):
         """Move all servos to home position"""
@@ -182,14 +205,23 @@ class DOFBOTController:
         Move multiple servos to specified positions
         
         Args:
-            positions (dict): {servo_id: position, ...}
+            positions (dict or list): {servo_id: position, ...} or [pos1, pos2, pos3, pos4, pos5, pos6]
             speed (int): Movement speed
         """
-        print("🤖 Moving to specified positions...")
-        for servo_id, position in positions.items():
-            if servo_id in self.SERVO_ADDRESSES:
-                self.set_servo_position(servo_id, position, speed)
-                time.sleep(0.2)
+        if isinstance(positions, dict):
+            # Convert dict to individual servo movements
+            print("🤖 Moving to specified positions...")
+            for servo_id, position in positions.items():
+                if servo_id in self.SERVO_ADDRESSES:
+                    self.set_servo_position(servo_id, position, speed)
+                    time.sleep(0.2)
+        elif isinstance(positions, list) and len(positions) == 6:
+            # Convert list to dict format
+            pos_dict = {i+1: positions[i] for i in range(6)}
+            self.move_to_position(pos_dict, speed)
+        else:
+            print("❌ Invalid positions format")
+            return False
     
     def cup_stacking_sequence(self):
         """
@@ -206,10 +238,10 @@ class DOFBOTController:
             5: 90    # Wrist pitch center
         }
         self.move_to_position(pickup_pos)
-            time.sleep(1)
+        time.sleep(1)
         
         # Step 2: Open gripper
-        self.set_gripper(100)  # Fully open
+        self.open_gripper()
         time.sleep(0.5)
         
         # Step 3: Move down to cup
@@ -219,7 +251,7 @@ class DOFBOTController:
         time.sleep(1)
         
         # Step 4: Close gripper to grab cup
-        self.set_gripper(0)  # Close
+        self.close_gripper()
         time.sleep(1)
         
         # Step 5: Lift cup
@@ -245,11 +277,11 @@ class DOFBOTController:
         self.move_to_position(stack_pos)
         time.sleep(1)
         
-        self.set_gripper(100)  # Open gripper
+        self.open_gripper()
         time.sleep(0.5)
         
         # Step 8: Return to home
-        self.home_all_servos()
+        self.home_position()
         
         print("✅ Cup stacking sequence completed!")
     
@@ -265,7 +297,7 @@ class DOFBOTController:
                 self.set_gripper(0)   # Closed
                 time.sleep(1)
                 self.set_gripper(100) # Open
-            time.sleep(1)
+                time.sleep(1)
             else:
                 print(f"Testing servo {servo_id}...")
                 current_pos = self.read_servo_position(servo_id)
@@ -277,7 +309,7 @@ class DOFBOTController:
                 self.set_servo_position(servo_id, 95)
                 time.sleep(0.5)
                 self.set_servo_position(servo_id, 90)
-            time.sleep(0.5)
+                time.sleep(0.5)
             
         print("✅ Servo test completed")
     
@@ -314,7 +346,7 @@ def main():
             controller.test_servos()
             
             # Home position
-            controller.home_all_servos()
+            controller.home_position()
             
             # Ask user if they want to run cup stacking
             response = input("\n🥤 Run cup stacking sequence? (y/n): ")
