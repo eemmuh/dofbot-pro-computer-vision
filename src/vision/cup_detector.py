@@ -26,13 +26,32 @@ class CupDetector:
         
         # Get the directory containing the model for config file
         model_dir = os.path.dirname(model_path)
-        config_path = os.path.join(model_dir, "yolo-cup-memory-optimized.cfg")
+        # Look for config file in cfg directory
+        config_path = os.path.join(os.path.dirname(model_dir), "cfg", "yolo-cup-memory-optimized.cfg")
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found: {config_path}")
         
         self.config_path = config_path
-        self.names_path = os.path.join(model_dir, "cup.names")
-        self.data_path = os.path.join(model_dir, "cup.data")
+        # Look for names and data files in the root directory
+        root_dir = os.path.dirname(os.path.dirname(model_dir))
+        self.names_path = os.path.join(root_dir, "cup.names")
+        self.data_path = os.path.join(root_dir, "data", "cup.data")
+        
+        # Handle darknet names file issue - temporarily replace coco.names with our cup.names
+        darknet_data_dir = os.path.join(root_dir, "darknet", "data")
+        coco_names_path = os.path.join(darknet_data_dir, "coco.names")
+        cup_names_path = os.path.join(darknet_data_dir, "cup.names")
+        
+        # Backup original coco.names if it exists and we haven't already
+        if os.path.exists(coco_names_path) and not os.path.exists(coco_names_path + ".backup"):
+            import shutil
+            shutil.copy2(coco_names_path, coco_names_path + ".backup")
+        
+        # Copy our cup.names to replace coco.names temporarily
+        if os.path.exists(coco_names_path):
+            import shutil
+            shutil.copy2(self.names_path, coco_names_path)
+            print("✅ Temporarily replaced coco.names with cup.names for detection")
     
     def detect_cups(self, frame: np.ndarray) -> List[Tuple[int, int, int, int, float]]:
         """
@@ -51,8 +70,12 @@ class CupDetector:
         
         try:
             # Run Darknet detection
+            # Use absolute paths for model and config files since darknet runs from its own directory
+            abs_model_path = os.path.abspath(self.model_path)
+            abs_config_path = os.path.abspath(self.config_path)
+            
             cmd = [
-                "./darknet", "detect", self.config_path, self.model_path, temp_image_path,
+                "./darknet", "detect", abs_config_path, abs_model_path, temp_image_path,
                 "-thresh", str(self.conf_threshold)
             ]
             
@@ -89,20 +112,27 @@ class CupDetector:
         height, width = frame_shape[:2]
         
         lines = output.strip().split('\n')
-        for line in lines:
-            if 'cup:' in line.lower() and '%' in line:
-                # Parse line like "cup: 76%"
+        
+        # Look for any detection line (more flexible)
+        for i, line in enumerate(lines):
+            line = line.strip()
+            
+            # Check if this line contains a detection (any class with percentage)
+            if ':' in line and '%' in line:
+                # Parse the detection line
                 parts = line.split(':')
                 if len(parts) >= 2:
+                    class_name = parts[0].strip()
                     confidence_str = parts[1].strip().replace('%', '')
+                    
                     try:
                         confidence = float(confidence_str) / 100.0
                         
                         # Look for bounding box coordinates in previous lines
-                        # Darknet typically outputs coordinates before the class label
-                        for i, prev_line in enumerate(lines[:lines.index(line)]):
-                            if prev_line.strip() and all(c.isdigit() or c in '.-' for c in prev_line.strip()):
-                                coords = prev_line.strip().split()
+                        for j in range(max(0, i-5), i):  # Check last 5 lines
+                            prev_line = lines[j].strip()
+                            if prev_line and all(c.isdigit() or c in '.-' for c in prev_line):
+                                coords = prev_line.split()
                                 if len(coords) >= 4:
                                     try:
                                         center_x = float(coords[0]) * width
@@ -113,13 +143,13 @@ class CupDetector:
                                         x = int(center_x - w / 2)
                                         y = int(center_y - h / 2)
                                         
+                                        # Accept any detection (not just 'cup')
                                         detections.append((x, y, int(w), int(h), confidence))
                                         break
                                     except (ValueError, IndexError):
                                         continue
                     except ValueError:
                         continue
-        
         return detections
     
     def get_cup_positions(self, frame: np.ndarray) -> List[Tuple[float, float, float]]:
@@ -174,4 +204,23 @@ class CupDetector:
             label = f"Cup: {confidence:.2f}"
             cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
-        return frame 
+        return frame
+    
+    def cleanup(self):
+        """Restore original coco.names file if it was backed up"""
+        try:
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            darknet_data_dir = os.path.join(root_dir, "darknet", "data")
+            coco_names_path = os.path.join(darknet_data_dir, "coco.names")
+            coco_backup_path = coco_names_path + ".backup"
+            
+            if os.path.exists(coco_backup_path):
+                import shutil
+                shutil.copy2(coco_backup_path, coco_names_path)
+                print("✅ Restored original coco.names file")
+        except Exception as e:
+            print(f"⚠️ Warning: Could not restore coco.names: {e}")
+    
+    def __del__(self):
+        """Cleanup when object is destroyed"""
+        self.cleanup()
