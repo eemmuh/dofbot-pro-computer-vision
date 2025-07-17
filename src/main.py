@@ -2,6 +2,7 @@ import cv2
 import time
 from vision.cup_detector import CupDetector
 from robot.dofbot_controller import DOFBOTController
+from robot.stacking_controller import StackingController
 
 def main():
     # Initialize camera
@@ -12,7 +13,7 @@ def main():
 
     # Initialize cup detector with trained YOLO model
     # Update this path to your trained model weights
-    model_path = "backup/yolo-cup_final.weights"  # After training
+    model_path = "backup/yolo-cup-memory-optimized_final.weights"  # After training
     detector = CupDetector(model_path=model_path, conf_threshold=0.5)
     
     # Initialize DOFBOT controller with auto-detection
@@ -29,6 +30,11 @@ def main():
         return
 
     print("✅ DOFBOT connected successfully!")
+    
+    # Initialize stacking controller
+    print("Initializing stacking controller...")
+    stacker = StackingController(robot)
+    print("✅ Stacking controller ready!")
     print("Cup Stacking System Ready!")
     print("Press 'q' to quit, 's' to start stacking sequence")
 
@@ -60,8 +66,10 @@ def main():
                 break
             elif key == ord('s') and len(cup_positions) > 0:
                 print(f"Starting stacking sequence with {len(cup_positions)} cups...")
-                # TODO: Implement stacking sequence
-                # robot.execute_stack_sequence(cup_positions)
+                try:
+                    stacker.execute_stack_sequence(cup_positions)
+                except Exception as e:
+                    print(f"❌ Stacking sequence failed: {e}")
 
     finally:
         # Cleanup
