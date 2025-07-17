@@ -27,9 +27,13 @@ monitor_resources() {
     while true; do
         echo "=== System Resources ==="
         echo "GPU Memory:"
-        nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits | while read line; do
-            echo "  $line"
-        done
+        if command -v nvidia-smi &> /dev/null; then
+            nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits | while read line; do
+                echo "  $line"
+            done
+        else
+            echo "  nvidia-smi not available"
+        fi
         
         echo "System Memory:"
         free -h | grep -E "Mem|Swap"
@@ -56,8 +60,8 @@ sudo fuser -v /dev/nvidia* 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null || t
 
 # Start training with memory-optimized configuration
 echo "Starting YOLO training with memory-optimized settings..."
-echo "Configuration: batch=1, subdivisions=4, width=256, height=256"
-echo "Effective batch size: 4 (much smaller than original 16)"
+echo "Configuration: batch=2, subdivisions=4, width=256, height=256"
+echo "Effective batch size: 0.5 (increased from 0.25)"
 
 cd darknet
 ./darknet detector train ../data/cup.data ../cfg/yolo-cup-memory-optimized.cfg ../yolov4.weights
