@@ -1,57 +1,49 @@
+#!/usr/bin/env python3
+"""
+Cup Detector using YOLO/Darknet
+Detects red Solo cups in images using trained YOLO model
+"""
+
 import cv2
 import numpy as np
+import os
 import subprocess
 import tempfile
-import os
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 class CupDetector:
-    def __init__(self, model_path: str, conf_threshold: float = 0.5, nms_threshold: float = 0.4):
+    def __init__(self, model_path: str, config_path: str, conf_threshold: float = 0.5, nms_threshold: float = 0.4):
         """
-        Initialize the cup detector with YOLO model using Darknet.
+        Initialize cup detector
         
         Args:
-            model_path: Path to the YOLO model weights
+            model_path: Path to trained YOLO weights file
+            config_path: Path to YOLO config file
             conf_threshold: Confidence threshold for detections
             nms_threshold: Non-maximum suppression threshold
         """
+        self.model_path = model_path
+        self.config_path = config_path
         self.conf_threshold = conf_threshold
         self.nms_threshold = nms_threshold
-        self.model_path = model_path
-        self.class_names = ['cup']
         
-        # Verify model files exist
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Model weights not found: {model_path}")
-        
-        # Get the directory containing the model for config file
-        model_dir = os.path.dirname(model_path)
-        # Look for config file in cfg directory
-        config_path = os.path.join(os.path.dirname(model_dir), "cfg", "yolo-cup-memory-optimized.cfg")
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Config file not found: {config_path}")
-        
-        self.config_path = config_path
-        # Look for names and data files in the root directory
-        root_dir = os.path.dirname(os.path.dirname(model_dir))
+        # Get the names file path (cup.names)
+        root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         self.names_path = os.path.join(root_dir, "cup.names")
-        self.data_path = os.path.join(root_dir, "data", "cup.data")
         
-        # Handle darknet names file issue - temporarily replace coco.names with our cup.names
-        darknet_data_dir = os.path.join(root_dir, "darknet", "data")
-        coco_names_path = os.path.join(darknet_data_dir, "coco.names")
-        cup_names_path = os.path.join(darknet_data_dir, "cup.names")
+        # Verify files exist
+        if not os.path.exists(self.model_path):
+            raise FileNotFoundError(f"Model file not found: {self.model_path}")
+        if not os.path.exists(self.config_path):
+            raise FileNotFoundError(f"Config file not found: {self.config_path}")
+        if not os.path.exists(self.names_path):
+            raise FileNotFoundError(f"Names file not found: {self.names_path}")
         
-        # Backup original coco.names if it exists and we haven't already
-        if os.path.exists(coco_names_path) and not os.path.exists(coco_names_path + ".backup"):
-            import shutil
-            shutil.copy2(coco_names_path, coco_names_path + ".backup")
-        
-        # Copy our cup.names to replace coco.names temporarily
-        if os.path.exists(coco_names_path):
-            import shutil
-            shutil.copy2(self.names_path, coco_names_path)
-            print("✅ Temporarily replaced coco.names with cup.names for detection")
+        print(f"✅ Cup detector initialized with:")
+        print(f"   Model: {self.model_path}")
+        print(f"   Config: {self.config_path}")
+        print(f"   Names: {self.names_path}")
+        print(f"   Confidence threshold: {self.conf_threshold}")
     
     def detect_cups(self, frame: np.ndarray) -> List[Tuple[int, int, int, int, float]]:
         """
@@ -69,14 +61,16 @@ class CupDetector:
             temp_image_path = tmp_file.name
         
         try:
-            # Run Darknet detection
+            # Run Darknet detection with explicit names file
             # Use absolute paths for model and config files since darknet runs from its own directory
             abs_model_path = os.path.abspath(self.model_path)
             abs_config_path = os.path.abspath(self.config_path)
+            abs_names_path = os.path.abspath(self.names_path)
             
             cmd = [
                 "./darknet", "detect", abs_config_path, abs_model_path, temp_image_path,
-                "-thresh", str(self.conf_threshold)
+                "-thresh", str(self.conf_threshold),
+                "-names", abs_names_path  # Explicitly specify the names file
             ]
             
             # Change to darknet directory for execution
@@ -113,12 +107,12 @@ class CupDetector:
         
         lines = output.strip().split('\n')
         
-        # Look for any detection line (more flexible)
+        # Look for detection lines
         for i, line in enumerate(lines):
             line = line.strip()
             
-            # Check if this line contains a detection (any class with percentage)
-            if ':' in line and '%' in line:
+            # Check if this line contains a detection (cup class with percentage)
+            if 'cup:' in line and '%' in line:
                 # Parse the detection line
                 parts = line.split(':')
                 if len(parts) >= 2:
@@ -143,13 +137,13 @@ class CupDetector:
                                         x = int(center_x - w / 2)
                                         y = int(center_y - h / 2)
                                         
-                                        # Accept any detection (not just 'cup')
                                         detections.append((x, y, int(w), int(h), confidence))
                                         break
                                     except (ValueError, IndexError):
                                         continue
                     except ValueError:
                         continue
+        
         return detections
     
     def get_cup_positions(self, frame: np.ndarray) -> List[Tuple[float, float, float]]:
@@ -207,20 +201,10 @@ class CupDetector:
         return frame
     
     def cleanup(self):
-        """Restore original coco.names file if it was backed up"""
-        try:
-            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            darknet_data_dir = os.path.join(root_dir, "darknet", "data")
-            coco_names_path = os.path.join(darknet_data_dir, "coco.names")
-            coco_backup_path = coco_names_path + ".backup"
-            
-            if os.path.exists(coco_backup_path):
-                import shutil
-                shutil.copy2(coco_backup_path, coco_names_path)
-                print("✅ Restored original coco.names file")
-        except Exception as e:
-            print(f"⚠️ Warning: Could not restore coco.names: {e}")
+        """Cleanup resources"""
+        # No specific cleanup needed for this implementation
+        pass
     
     def __del__(self):
-        """Cleanup when object is destroyed"""
+        """Destructor"""
         self.cleanup()
