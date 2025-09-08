@@ -4,7 +4,7 @@ This project implements an automated cup stacking and sorting system using the D
 
 ---
 
-## 🚀 Project Status (Updated July 2025)
+## 🚀 Project Status
 
 - **Model Training:** ✅ Complete (YOLO model trained and validated)
 - **Detection:** ✅ Real-time detection working with Darknet on Jetson Orin NX
@@ -50,7 +50,7 @@ This project implements an automated cup stacking and sorting system using the D
 
 ---
 
-## 🏗️ Project Structure (Updated)
+## Project Structure 
 ```
 cup-stacking-project/
 ├── src/
@@ -323,13 +323,6 @@ ls -la cfg/yolo-cup-*.cfg
 
 ---
 
-## 📄 License
-MIT License
-
----
-
-## 🤝 Contributing
-
 This project demonstrates the power of combining computer vision, robotics, and intelligent algorithms for practical automation tasks. The modular design makes it easy to extend and adapt for different applications.
 
 **Key Innovations:**
@@ -338,4 +331,9 @@ This project demonstrates the power of combining computer vision, robotics, and 
 - **Real-time Processing**: Live detection and response
 - **Capacity Management**: Intelligent zone balancing
 - **Visual Feedback**: Clear system status and operation
+
+
+
+
+
 

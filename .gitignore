@@ -31,6 +31,16 @@ dataset/labels/
 dataset/train/
 dataset/valid/
 
+# Dataset quality control
+bad.list
+*.list
+
+# Camera and video capture
+*.jpg.tmp
+*.png.tmp
+capture_*.jpg
+screenshot_*.jpg
+
 # Model weights and large files
 *.weights
 *.pt
@@ -76,19 +86,20 @@ results.txt
 results_yolov4.txt
 results_yolov4_custom.txt
 
-# ===== ROS SPECIFIC =====
+# ===== ROS SPECIFIC (Not used in this project) =====
+# Commented out since this project doesn't use ROS
 
 # ROS build and devel directories
-build/
-devel/
-install/
+# build/
+# devel/
+# install/
 
 # ROS log files
-~/.ros/log/
+# ~/.ros/log/
 
 # ROS bag files
-*.bag
-*.bag.active
+# *.bag
+# *.bag.active
 
 # ===== DOFBOT SPECIFIC =====
 
@@ -135,6 +146,11 @@ temp/
 tmp/
 *.tmp
 *.bak
+
+# Real-time processing temporary files
+/tmp/darknet_*
+*.jpg.tmp
+*.png.tmp
 
 # Crash dumps and core files
 core.*

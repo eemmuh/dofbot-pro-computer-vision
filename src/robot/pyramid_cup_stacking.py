@@ -38,7 +38,7 @@ except ImportError:
     CALIBRATED_POSITIONS_AVAILABLE = False
     # Default positions (you should calibrate these)
     PYRAMID_POSITIONS = [
-        [90, 15, 70, 90, 90, 30],  # Bottom Left
+        [90, 15, 60, 50, 10, 30],  # Bottom Left
         [90, 15, 70, 90, 90, 30],  # Bottom Center
         [90, 15, 70, 90, 90, 30],  # Bottom Right
         [90, 15, 70, 90, 90, 30],  # Middle Left
