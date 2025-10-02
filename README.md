@@ -4,19 +4,20 @@ This project provides comprehensive robot control for the DOFBOT Pro robot arm, 
 
 ---
 
-## 🚀 Project Status
+## Project Status
 
-- **Robot Integration:** ✅ Complete (DOFBOT Pro controller working)
-- **Manual Control:** ✅ Complete (precise coordinate control)
-- **Gripper Control:** ✅ Complete (optimized angles: Open 30°, Close 40°)
-- **Cup Stacking:** ✅ Complete (pyramid stacking implemented)
-- **Cup Sorting:** ✅ Complete (intelligent sorting strategies)
-- **Project Cleanup:** ✅ Complete (removed redundant files)
-- **Documentation:** ✅ Complete (comprehensive guides)
+- **Robot Integration:** Complete (DOFBOT Pro controller working)
+- **Manual Control:** Complete (precise coordinate control)
+- **Gripper Control:** Complete (optimized angles: Open 30°, Close 40°)
+- **Cup Stacking:** Complete (pyramid stacking implemented)
+- **Cup Sorting:** Complete (intelligent sorting strategies)
+- **Project Cleanup:** Complete (removed redundant files)
+- **Documentation:** Complete (comprehensive guides)
+- **Package Management:** Complete (UV for fast dependency management)
 
 ---
 
-## 🏆 Project Features
+## Project Features
 
 ### **Cup Stacking System**
 - **Pyramid Formation**: Automatically stacks cups in pyramid pattern
@@ -24,7 +25,7 @@ This project provides comprehensive robot control for the DOFBOT Pro robot arm, 
 - **Robot Control**: Precise DOFBOT Pro arm movements
 - **Multiple Patterns**: Tower, pyramid, and custom arrangements
 
-### **Cup Sorting System** (NEW!)
+### **Cup Sorting System**
 - **Multiple Sorting Strategies**: Position, distance, pattern, random, capacity
 - **Zone Management**: 3 sorting zones with capacity limits (5 cups each)
 - **Visual Feedback**: Real-time zone visualization and statistics
@@ -32,23 +33,24 @@ This project provides comprehensive robot control for the DOFBOT Pro robot arm, 
 
 ---
 
-## 🎯 Current Capabilities
+## Current Capabilities
 
-### **✅ Working Systems**
+### **Working Systems**
 1. **Manual Robot Control**: Precise coordinate control with `manual_coordinate_control.py`
 2. **Cup Stacking Algorithm**: Optimized stacking in `src/robot/fixed_cup_stacking_algorithm.py`
 3. **Cup Sorting System**: Intelligent sorting with `realtime_cup_sorting_improved.py`
 4. **Gripper Control**: Optimized angles (Open: 30°, Close: 40°)
 5. **Camera Integration**: Live video feed processing
 6. **Multi-threading**: Detection and robot control in parallel
+7. **Fast Package Management**: UV for 10-100x faster dependency installation
 
-### **🎮 Available Modes**
+### **Available Modes**
 - **Manual Control**: Direct robot arm control with predefined positions
 - **Stacking Mode**: Build pyramids and towers
 - **Sorting Mode**: Organize cups into zones
 - **Test Mode**: Verify detection without robot
 
-## 📁 Project Structure (Cleaned)
+## Project Structure
 
 ### **Core Files**
 - `manual_coordinate_control.py` - Manual robot control with predefined positions
@@ -62,7 +64,7 @@ This project provides comprehensive robot control for the DOFBOT Pro robot arm, 
 - `CUP_SORTING_GUIDE.md` - Cup sorting instructions
 
 ### **Configuration**
-- `requirements.txt` - Python dependencies
+- `requirements.txt` - Python dependencies (compatible with pip and UV)
 - `cfg/` - YOLO model configurations
 - `data/` - Training data and labels
 - `dataset/` - Dataset organization
@@ -70,6 +72,39 @@ This project provides comprehensive robot control for the DOFBOT Pro robot arm, 
 ### **Tools**
 - `tools/simple_working_detector.py` - Simple detection test
 - `tools/manual_position_adjuster.py` - Manual position adjustment
+
+## Quick Start
+
+### **Installation**
+```bash
+# Install dependencies with UV (recommended - 10-100x faster)
+uv pip install -r requirements.txt
+
+# Or use traditional pip
+pip install -r requirements.txt
+```
+
+### **Running Robot Control**
+```bash
+# Manual robot control
+python3 manual_coordinate_control.py
+
+# Cup stacking algorithm
+python3 src/robot/fixed_cup_stacking_algorithm.py
+
+# Cup sorting system
+python3 realtime_cup_sorting_improved.py
+```
+
+### **Package Management**
+```bash
+# Add new packages (fast with UV)
+uv pip install new-package
+pip freeze > requirements.txt  # Update requirements.txt
+
+# Install everything
+uv pip install -r requirements.txt  # Fast with UV
+```
 
 ---
 
@@ -100,7 +135,7 @@ cup-stacking-project/
 
 ---
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### **1. Test Cup Detection** (Recommended First Step)
 ```bash
@@ -142,7 +177,7 @@ python simple_cup_detection.py
 
 ---
 
-## 🎯 Cup Sorting System (NEW!)
+## Cup Sorting System
 
 ### **Sorting Strategies**
 1. **Position-based**: Sort by horizontal position (left/center/right)
@@ -164,7 +199,7 @@ python simple_cup_detection.py
 
 ---
 
-## 🏗️ Cup Stacking System
+## Cup Stacking System
 
 ### **Stacking Patterns**
 - **Pyramid**: 6-cup pyramid formation
@@ -179,7 +214,7 @@ python simple_cup_detection.py
 
 ---
 
-## 🔧 System Requirements
+## System Requirements
 
 ### **Hardware**
 - **DOFBOT Pro Robot Arm**: 6-DOF robotic arm
@@ -192,12 +227,13 @@ python simple_cup_detection.py
 - **Darknet**: YOLO object detection
 - **Arm_Lib**: Robot arm control library
 - **smbus2**: I2C communication (for Jetson compatibility)
+- **UV**: Fast package management (optional but recommended)
 
 ---
 
-## 📊 Current Status
+## Current Status
 
-### ✅ **Completed**
+### **Completed**
 - **Dataset Preparation**: 224 cup images with YOLO labels
 - **Model Training**: YOLO model trained and validated
 - **Robot Integration**: Full DOFBOT Pro control
@@ -205,12 +241,13 @@ python simple_cup_detection.py
 - **Cup Sorting**: Multiple intelligent sorting strategies
 - **Real-time Detection**: Live camera processing
 - **Project Cleanup**: Removed redundant files and organized structure
+- **Package Management**: UV integration for faster dependency management
 
-### 🔄 **In Progress**
+### **In Progress**
 - **System Testing**: Fine-tuning and optimization
 - **Documentation**: User guides and examples
 
-### 📋 **Future Enhancements**
+### **Future Enhancements**
 - **Color Detection**: Sort by actual cup colors
 - **Multi-criteria Sorting**: Combine multiple sorting factors
 - **Web Interface**: Remote control and monitoring
@@ -218,22 +255,21 @@ python simple_cup_detection.py
 
 ---
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### **1. Environment Setup**
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install dependencies with UV (recommended - 10-100x faster)
+uv pip install -r requirements.txt
 
-# Install dependencies
+# Or use traditional pip
 pip install -r requirements.txt
 ```
 
 ### **2. Robot Setup**
 ```bash
 # Test robot connection
-python simple_cup_detection.py
+python3 manual_coordinate_control.py
 
 # Verify DOFBOT Pro is connected and responding
 ```
@@ -241,19 +277,19 @@ python simple_cup_detection.py
 ### **3. Camera Setup**
 ```bash
 # Test camera detection
-python test_cup_sorting_improved.py
+python3 realtime_cup_sorting_improved.py
 
 # Choose option 2 for camera testing
 ```
 
 ---
 
-## 🎮 Usage Examples
+## Usage Examples
 
 ### **Educational Demonstrations**
 ```bash
 # Show cup sorting capabilities
-python realtime_cup_sorting_improved.py
+python3 realtime_cup_sorting_improved.py
 
 # Switch between sorting modes during operation
 # '1' for position-based, '2' for distance-based, etc.
@@ -278,7 +314,7 @@ python test_cup_sorting_improved.py
 
 ---
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### **Camera Issues**
 ```bash
@@ -309,7 +345,7 @@ ls -la cfg/yolo-cup-*.cfg
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 - **`CUP_STACKING_GUIDE.md`**: Complete stacking system guide
 - **`CUP_SORTING_GUIDE.md`**: Complete sorting system guide
@@ -317,7 +353,7 @@ ls -la cfg/yolo-cup-*.cfg
 
 ---
 
-## 🎉 Success Metrics
+## Success Metrics
 
 - **Detection Accuracy**: 100% confidence on clear cup images
 - **Sorting Accuracy**: Cups correctly placed in target zones
@@ -327,7 +363,7 @@ ls -la cfg/yolo-cup-*.cfg
 
 ---
 
-## 🔮 Future Roadmap
+## Future Roadmap
 
 ### **Short Term**
 - Fine-tune sorting algorithms
