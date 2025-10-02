@@ -1,18 +1,18 @@
-# DOFBOT Pro Cup Stacking & Sorting Project
+# DOFBOT Pro Robot Control Project
 
-This project implements an automated cup stacking and sorting system using the DOFBOT Pro robot arm. The system uses computer vision for cup detection and precise robotic control for both stacking cups in pyramid formation and sorting them into organized zones.
+This project provides comprehensive robot control for the DOFBOT Pro robot arm, including cup stacking, sorting, and manual control capabilities. The system has been optimized and cleaned up for reliable operation.
 
 ---
 
 ## 🚀 Project Status
 
-- **Model Training:** ✅ Complete (YOLO model trained and validated)
-- **Detection:** ✅ Real-time detection working with Darknet on Jetson Orin NX
-- **Accuracy:** ✅ High (100% confidence on clear cup images)
-- **Robot Integration:** ✅ Complete (DOFBOT controller working)
-- **Stacking Algorithm:** ✅ Complete (pyramid stacking implemented)
-- **Sorting System:** ✅ Complete (cup sorting with multiple strategies)
+- **Robot Integration:** ✅ Complete (DOFBOT Pro controller working)
+- **Manual Control:** ✅ Complete (precise coordinate control)
+- **Gripper Control:** ✅ Complete (optimized angles: Open 30°, Close 40°)
+- **Cup Stacking:** ✅ Complete (pyramid stacking implemented)
+- **Cup Sorting:** ✅ Complete (intelligent sorting strategies)
 - **Project Cleanup:** ✅ Complete (removed redundant files)
+- **Documentation:** ✅ Complete (comprehensive guides)
 
 ---
 
@@ -35,18 +35,41 @@ This project implements an automated cup stacking and sorting system using the D
 ## 🎯 Current Capabilities
 
 ### **✅ Working Systems**
-1. **Real-time Cup Detection**: YOLO model with 100% confidence
-2. **Robot Arm Control**: Full DOFBOT Pro integration
-3. **Cup Stacking**: Pyramid and tower arrangements
-4. **Cup Sorting**: Multiple intelligent sorting strategies
+1. **Manual Robot Control**: Precise coordinate control with `manual_coordinate_control.py`
+2. **Cup Stacking Algorithm**: Optimized stacking in `src/robot/fixed_cup_stacking_algorithm.py`
+3. **Cup Sorting System**: Intelligent sorting with `realtime_cup_sorting_improved.py`
+4. **Gripper Control**: Optimized angles (Open: 30°, Close: 40°)
 5. **Camera Integration**: Live video feed processing
 6. **Multi-threading**: Detection and robot control in parallel
 
 ### **🎮 Available Modes**
+- **Manual Control**: Direct robot arm control with predefined positions
 - **Stacking Mode**: Build pyramids and towers
 - **Sorting Mode**: Organize cups into zones
 - **Test Mode**: Verify detection without robot
-- **Manual Control**: Direct robot arm control
+
+## 📁 Project Structure (Cleaned)
+
+### **Core Files**
+- `manual_coordinate_control.py` - Manual robot control with predefined positions
+- `src/robot/fixed_cup_stacking_algorithm.py` - Main stacking algorithm
+- `realtime_cup_sorting_improved.py` - Cup sorting system
+- `COORDINATE_REFERENCE.md` - Robot coordinate reference guide
+
+### **Documentation**
+- `README.md` - This file
+- `CUP_STACKING_GUIDE.md` - Cup stacking instructions
+- `CUP_SORTING_GUIDE.md` - Cup sorting instructions
+
+### **Configuration**
+- `requirements.txt` - Python dependencies
+- `cfg/` - YOLO model configurations
+- `data/` - Training data and labels
+- `dataset/` - Dataset organization
+
+### **Tools**
+- `tools/simple_working_detector.py` - Simple detection test
+- `tools/manual_position_adjuster.py` - Manual position adjustment
 
 ---
 

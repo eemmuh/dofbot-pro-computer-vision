@@ -40,6 +40,8 @@ bad.list
 *.png.tmp
 capture_*.jpg
 screenshot_*.jpg
+test_*.jpg
+temp_*.jpg
 
 # Model weights and large files
 *.weights
@@ -151,6 +153,10 @@ tmp/
 /tmp/darknet_*
 *.jpg.tmp
 *.png.tmp
+
+# Tools and utilities
+tools/__pycache__/
+tools/*.pyc
 
 # Crash dumps and core files
 core.*
