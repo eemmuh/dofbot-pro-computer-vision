@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Simple Coordinate Tester for DOFBot Pro
-Easy tool for testing robot positions
-"""
 
 import sys
 import os
@@ -29,11 +24,11 @@ except Exception as e:
 class SimpleCoordinateTester:
     def __init__(self):
         self.robot = None
-        self.current_position = [90, 30, 140, 20, 0, 30]  # Home position
+        self.current_position = [90, 30, 140, 20, 90, 30]  # Home position
         
         # Simple test positions
         self.positions = {
-            'home': [90, 30, 140, 20, 0, 30],
+            'home': [90, 30, 140, 20, 90, 30],
             'pickup': [90, 35, 45, 90, 90, 30],
             'grip': [90, 30, 35, 90, 90, 0],
             'lift': [90, 40, 50, 90, 90, 0],
