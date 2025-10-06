@@ -24,20 +24,22 @@ except Exception as e:
 class SimpleCoordinateTester:
     def __init__(self):
         self.robot = None
-        self.current_position = [90, 30, 140, 20, 90, 30]  # Home position
+        self.current_position = [90, 20, 50, 90, 90, 30]  # Home position
         
-        # Simple test positions
+        # Simple test positions - optimized for cup pickup sequence
         self.positions = {
-            'home': [90, 30, 140, 20, 90, 30],
-            'pickup': [90, 35, 45, 90, 90, 30],
-            'grip': [90, 30, 35, 90, 90, 0],
-            'lift': [90, 40, 50, 90, 90, 0],
-            'stack': [90, 35, 40, 90, 90, 0],
-            'open': [90, 35, 40, 90, 90, 30],
-            'left': [60, 40, 50, 90, 90, 30],
-            'right': [120, 40, 50, 90, 90, 30],
-            'high': [90, 50, 60, 90, 90, 30],
-            'low': [90, 25, 30, 90, 90, 30],
+            'home': [90, 20, 50, 90, 90, 30],      # Good cup pickup height
+            'pickup': [90, 20, 50, 90, 90, 30],     # Approach cup position
+            'grip': [90, 20, 50, 90, 90, 0],        # At cup level, gripper closed
+            'lift': [90, 35, 65, 90, 90, 0],        # Lifted cup (higher shoulder + elbow)
+            'stack': [90, 20, 50, 90, 90, 0],       # At stack level (same height as pickup)
+            'open': [90, 20, 50, 90, 90, 30],       # Open gripper at stack
+            'left': [60, 20, 50, 90, 90, 30],       # Left side pickup
+            'right': [120, 20, 50, 90, 90, 30],     # Right side pickup
+            'high': [90, 45, 70, 90, 90, 30],        # Higher safe position
+            'low': [90, 15, 45, 90, 90, 30],        # Lower position
+            'approach': [90, 25, 55, 90, 90, 30],   # Approach from above
+            'retract': [90, 30, 60, 90, 90, 30],    # Retract after placing
         }
         
     def initialize_robot(self):
