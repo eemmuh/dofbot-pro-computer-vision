@@ -1,47 +1,35 @@
-# Python
-venv/
+# ===== PYTHON =====
 __pycache__/
 *.py[cod]
 *$py.class
 *.egg-info/
+.venv/
+venv/
+env/
+ENV/
 
-# IDE
+# ===== IDE & EDITORS =====
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# Environment
-.env
-env/
-ENV/
-
-# OS specific files
+# ===== OS SPECIFIC =====
 .DS_Store
 Thumbs.db
+*.tmp
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# ===== JUPYTER NOTEBOOKS =====
+.ipynb_checkpoints/
 
 # ===== CUP STACKING PROJECT SPECIFIC =====
 
-# Dataset files (large files that shouldn't be in git)
+# Dataset files (large training data)
 dataset/images/
 dataset/labels/
 dataset/train/
 dataset/valid/
-
-# Dataset quality control
-bad.list
-*.list
-
-# Camera and video capture
-*.jpg.tmp
-*.png.tmp
-capture_*.jpg
-screenshot_*.jpg
-test_*.jpg
-temp_*.jpg
 
 # Model weights and large files
 *.weights
@@ -59,14 +47,19 @@ checkpoints/
 backup/
 *.backup
 *.log
-*.txt
-!cup.names
-!cup.data
-!requirements.txt
 
 # Video files
 *.mp4
 *.avi
+*.mov
+
+# Camera and video capture temporary files
+*.jpg.tmp
+*.png.tmp
+capture_*.jpg
+screenshot_*.jpg
+test_*.jpg
+temp_*.jpg
 
 # Test results and predictions
 predictions/
@@ -79,57 +72,14 @@ mAP/
 *.txt.out
 
 # Training logs and charts
-chart.png
-chart_yolov4.png
-chart_yolov4_custom.png
-
-# Validation results
-results.txt
-results_yolov4.txt
-results_yolov4_custom.txt
-
-# ===== ROS SPECIFIC (Not used in this project) =====
-# Commented out since this project doesn't use ROS
-
-# ROS build and devel directories
-# build/
-# devel/
-# install/
-
-# ROS log files
-# ~/.ros/log/
-
-# ROS bag files
-# *.bag
-# *.bag.active
-
-# ===== DOFBOT SPECIFIC =====
-
-# DOFBOT temporary files
-test_*.py
-*_test.py
-*_diagnostic.py
-*_monitor.py
-*_connection.py
-check_*.py
-find_*.py
-configure_*.py
-setup_*.py
-
-# DOFBOT troubleshooting files
-*_TROUBLESHOOTING.md
-*_troubleshooting.md
+chart*.png
+results*.txt
 
 # ===== DARKNET SPECIFIC =====
-
 # Darknet repository (separate git repo)
 darknet/
 
-# Darknet training artifacts
-*.cfg.backup
-
 # ===== SYSTEM MONITORING =====
-
 # System monitoring logs
 tegrastats.log
 nvidia-smi.log
@@ -138,46 +88,16 @@ memory_usage.log
 performance_*.log
 gpu_usage_*.log
 
-# Performance monitoring
-*.csv
-
-# ===== TEMPORARY FILES =====
-
-# Temporary files
-temp/
-tmp/
-*.tmp
-*.bak
-
-# Real-time processing temporary files
-/tmp/darknet_*
-*.jpg.tmp
-*.png.tmp
-
-# Tools and utilities
-tools/__pycache__/
-tools/*.pyc
-
-# Crash dumps and core files
-core.*
-*.core
-*.dmp
-
 # ===== EXCEPTIONS =====
-
 # Keep essential project files
-!src/
 !cup.names
 !cup.data
-!yolo-cup.cfg
 !requirements.txt
 !README.md
-!auto_labeling.py
-!labelme_to_yolo.py
-!prepare_training.py
-!train_yolo.py
-!transfer_learning.py
-!validate_labels.py
-!xml_to_yolo.py
+!*.cfg
+!*.py
+!*.ipynb
+!*.md
+
 
 
