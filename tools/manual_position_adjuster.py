@@ -55,7 +55,7 @@ class ManualPositionAdjuster:
         
         # Initialize camera
         try:
-            self.camera = cv2.VideoCapture(0)
+            self.camera = cv2.VideoCapture(1)
             if not self.camera.isOpened():
                 print("❌ Could not open camera")
                 return False

@@ -1,32 +1,13 @@
-# Core dependencies for YOLOv4 cup detection
+# Core dependencies for cup detection and robot control
 opencv-python>=4.5.0
 numpy>=1.19.0
-torch>=1.8.0
-torchvision>=0.9.0
 
 # Robot control and ROS
 pyserial>=3.5
 rospkg>=1.3.0
 PyYAML>=6.0.0
 
-# Image processing
-Pillow>=8.0.0
-
-# Utilities
-pathlib2>=2.3.0
-tqdm>=4.60.0
-matplotlib>=3.3.0
-seaborn>=0.11.0
-
 # Network and system utilities
 requests>=2.25.0
-psutil>=5.8.0
-
-# Optional: GPU acceleration
-# torch-cuda>=1.8.0  # Uncomment if using CUDA
-
-# Development dependencies
-pytest>=6.0.0
-black>=21.0.0
-flake8>=3.8.0 
+psutil>=5.8.0 
 
